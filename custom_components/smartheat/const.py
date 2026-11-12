@@ -123,6 +123,11 @@ STDIN_BEFEHL_ENTFERNEN = "entfernen"
 # Pfad der Route `geraetecode`). Kopie von heizungsbruecke/stdin_befehl.py und dem Ereignis des Add-ons (Vertrag V5).
 STDIN_BEFEHL_NACHWEIS = "nachweis"
 STDIN_ZEILE_FORMAT = "{befehl} {geraet_id}\n"
+# Wahl beim Entfernen: `entfernen <geraet_id> freigeben` loest das Geraet nach der Abmeldung aus dem Konto; ohne den
+# Zusatz bleibt es dort. Die Option des Eintrags (Vorgabe aus) steuert, ob die Integration ihn anhaengt.
+STDIN_ZUSATZ_FREIGEBEN = "freigeben"
+STDIN_ZEILE_FORMAT_FREIGEBEN = "{befehl} {geraet_id} {zusatz}\n"
+OPTION_GERAET_FREIGEBEN = "geraet_freigeben"
 NACHWEIS_EVENT = "smartheat_nachweis"
 NACHWEIS_EVENT_SCHEMA = 1
 NACHWEIS_EVENT_FIELDS = ("schema", "geraet_id", "zeitstempel", "signatur")

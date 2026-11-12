@@ -422,6 +422,20 @@ async def test_nachweis_schreibt_den_befehl_und_liefert_die_signatur_des_ereigni
     assert nachweis == {"geraet_id": NACHWEIS_ID, "zeitstempel": 1761800000, "signatur": "MEUC-sig_geheim9"}
 
 
+async def test_entfernen_meldet_die_wahl_nur_auf_ausdruecklichen_wunsch(hass, supervisor):
+    await addon_control.async_entfernen_melden(hass, NACHWEIS_ID)
+    await addon_control.async_entfernen_melden(hass, NACHWEIS_ID, freigeben=True)
+
+    assert supervisor.stdin == [(SLUG, b"entfernen shg-aaaaaaaaaaaaaaaa\n\n"),
+                                (SLUG, b"entfernen shg-aaaaaaaaaaaaaaaa freigeben\n\n")]
+
+
+async def test_entfernen_mit_ungueltiger_id_schreibt_auch_mit_wahl_nichts(hass, supervisor):
+    await addon_control.async_entfernen_melden(hass, "shg-aaaaaaaaaaaaaaaa\nfreigeben", freigeben=True)
+
+    assert supervisor.stdin == []
+
+
 @pytest.mark.parametrize("falsch", [
     {**NACHWEIS_DATEN, "geraet_id": "shg-bbbbbbbbbbbbbbbb"},
     {**NACHWEIS_DATEN, "schema": 2}, {**NACHWEIS_DATEN, "schema": True}, {**NACHWEIS_DATEN, "schema": "1"},

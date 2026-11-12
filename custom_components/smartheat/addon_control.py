@@ -34,6 +34,8 @@ from .const import (
     STDIN_BEFEHL_ENTFERNEN,
     STDIN_BEFEHL_NACHWEIS,
     STDIN_ZEILE_FORMAT,
+    STDIN_ZEILE_FORMAT_FREIGEBEN,
+    STDIN_ZUSATZ_FREIGEBEN,
 )
 from .supervisor_client import async_repository_slug, async_repository_slugs, fremde_bruecken, matching_addons
 
@@ -223,10 +225,12 @@ async def async_discovery(hass: HomeAssistant) -> dict | None:
     return {key: chosen[key] for key in DISCOVERY_FIELDS if key in chosen}
 
 
-async def async_entfernen_melden(hass: HomeAssistant, geraet_id: object) -> None:
+async def async_entfernen_melden(hass: HomeAssistant, geraet_id: object, freigeben: bool = False) -> None:
     """Meldet das Geraet beim Loeschen des Eintrags ab: schreibt `entfernen <geraet_id>` als
     stdin-Zeile an die eigene Heizungsbruecke (Supervisor `write_addon_stdin`); die Bruecke meldet das Geraet lokal ab
-    (Markierung, Ursprungswerte). Kein Server-Aufruf; aus dem Konto entfernt der Kunde das Geraet im Portal. Wirft nie:
+    (Markierung, Ursprungswerte). Mit `freigeben` haengt die Zeile die Wahl an, das Geraet danach aus dem Konto zu
+    loesen (die Bruecke meldet das dem Server selbst). Kein Server-Aufruf; ohne die Wahl entfernt der Kunde das Geraet
+    im Portal aus dem Konto. Wirft nie:
     jeder Fehler (keine oder ungueltige Geraete-ID, kein Supervisor, Bruecke fehlt oder mehrfach, Supervisor-Fehler,
     Add-on gestoppt) ist eine WARNING ohne den Wert, der Eintrag wird trotzdem entfernt. `fullmatch`, damit kein
     Zeilenumbruch eine zweite Zeile einschmuggelt."""
@@ -241,7 +245,11 @@ async def async_entfernen_melden(hass: HomeAssistant, geraet_id: object) -> None
         if slug is None:
             _LOGGER.warning("Heizungsbruecke nicht gefunden: Geraet im Portal abmelden")
             return
-        zeile = STDIN_ZEILE_FORMAT.format(befehl=STDIN_BEFEHL_ENTFERNEN, geraet_id=geraet_id)
+        if freigeben:
+            zeile = STDIN_ZEILE_FORMAT_FREIGEBEN.format(
+                befehl=STDIN_BEFEHL_ENTFERNEN, geraet_id=geraet_id, zusatz=STDIN_ZUSATZ_FREIGEBEN)
+        else:
+            zeile = STDIN_ZEILE_FORMAT.format(befehl=STDIN_BEFEHL_ENTFERNEN, geraet_id=geraet_id)
         await get_supervisor_client(hass).addons.write_addon_stdin(slug, zeile.encode())
     except Exception as error:  # noqa: BLE001 - der Eintrag wird trotzdem entfernt
         _LOGGER.warning("Abmelden des Geraets bei der Heizungsbruecke gescheitert (%s): Geraet im Portal abmelden",

@@ -241,6 +241,16 @@
       "reconfigure_successful": "The new mapping has been applied."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "When removing the device",
+        "description": "Applies when this entry is deleted. The device is always signed off locally first.",
+        "data": {"geraet_freigeben": "Also release the device from the account"},
+        "data_description": {"geraet_freigeben": "If off, the device stays in the account and can be removed in the portal."}
+      }
+    }
+  },
   "selector": {
     "lever_set": {
       "options": {

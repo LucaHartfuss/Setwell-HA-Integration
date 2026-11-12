@@ -166,6 +166,31 @@ async def test_removing_the_entry_signs_the_device_off_through_stdin(hass, super
     assert [r for r in caplog.records if r.name == LOGGER_ADDON_CONTROL] == []
 
 
+async def test_die_option_geraet_freigeben_haengt_die_wahl_an_die_stdin_zeile(hass, supervisor, aioclient_mock):
+    """Ist die Option gesetzt, schreibt das Loeschen `entfernen <geraet_id> freigeben`; sonst bleibt es bei der
+    einfachen Zeile (Vorgabe: das Geraet bleibt im Konto). Kein Server-Aufruf."""
+    entry = await _setup(hass, geraet_id=GUELTIG)
+    hass.config_entries.async_update_entry(entry, options={"geraet_freigeben": True})
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert supervisor.stdin == [(BRIDGE_SLUG, b"entfernen shg-aaaaaaaaaaaaaaaa freigeben\n\n")]
+    assert aioclient_mock.call_count == 0
+
+
+@pytest.mark.parametrize("optionen", [{}, {"geraet_freigeben": False}, {"geraet_freigeben": "ja"},
+                                      {"geraet_freigeben": 1}], ids=["leer", "falsch", "text", "zahl"])
+async def test_nur_ein_echtes_true_gibt_das_geraet_frei(hass, supervisor, optionen):
+    entry = await _setup(hass, geraet_id=GUELTIG)
+    hass.config_entries.async_update_entry(entry, options=optionen)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert supervisor.stdin == [(BRIDGE_SLUG, b"entfernen shg-aaaaaaaaaaaaaaaa\n\n")]
+
+
 def _bruecke_fehlt(supervisor):
     supervisor.installed = []
 

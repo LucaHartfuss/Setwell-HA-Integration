@@ -241,6 +241,16 @@
       "reconfigure_successful": "Die neue Zuordnung ist übernommen."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Beim Entfernen des Geräts",
+        "description": "Gilt, wenn dieser Eintrag gelöscht wird. Das Gerät wird immer zuerst lokal abgemeldet.",
+        "data": {"geraet_freigeben": "Gerät zusätzlich aus dem Konto lösen"},
+        "data_description": {"geraet_freigeben": "Ist die Option aus, bleibt das Gerät im Konto und lässt sich im Portal entfernen."}
+      }
+    }
+  },
   "selector": {
     "lever_set": {
       "options": {
