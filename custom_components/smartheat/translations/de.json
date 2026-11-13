@@ -100,7 +100,8 @@
           "energy_primary_dhw": "Energie: Primärenergie Warmwasser (optional)",
           "energy_thermal_heating": "Energie: Wärme Heizen (optional)",
           "energy_thermal_dhw": "Energie: Wärme Warmwasser (optional)",
-          "energy_electrical_total": "Energie: Strom gesamt (optional)"
+          "energy_electrical_total": "Energie: Strom gesamt (optional)",
+          "fault_codes": "Störungscodes (optional)"
         },
         "data_description": {
           "curve": "Die Entity, die die Steigung der Heizkurve hält. SmartHeat passt sie an.",
@@ -127,7 +128,8 @@
           "energy_primary_dhw": "Primärenergie, die fürs Warmwasser verbraucht wird. Optional.",
           "energy_thermal_heating": "Wärmeenergie, die fürs Heizen abgegeben wird. Optional.",
           "energy_thermal_dhw": "Wärmeenergie, die fürs Warmwasser abgegeben wird. Optional.",
-          "energy_electrical_total": "Gesamte verbrauchte elektrische Energie. Optional."
+          "energy_electrical_total": "Gesamte verbrauchte elektrische Energie. Optional.",
+          "fault_codes": "Die Entity, die die Störungscodes des Wärmeerzeugers zeigt. Nur lesend. Optional."
         }
       },
       "benachrichtigung": {
@@ -262,7 +264,6 @@
     },
     "hinweise": {
       "options": {
-        "raumfuehler": "Raumfühler",
         "batterie": "Batterie",
         "manueller_eingriff": "Manueller Eingriff",
         "quellwechsel": "Quellwechsel",

@@ -100,7 +100,8 @@
           "energy_primary_dhw": "Energy: primary, hot water (optional)",
           "energy_thermal_heating": "Energy: thermal heating (optional)",
           "energy_thermal_dhw": "Energy: thermal, hot water (optional)",
-          "energy_electrical_total": "Energy: electrical total (optional)"
+          "energy_electrical_total": "Energy: electrical total (optional)",
+          "fault_codes": "Fault codes (optional)"
         },
         "data_description": {
           "curve": "The entity that holds the slope of the heating curve. SmartHeat adjusts it.",
@@ -127,7 +128,8 @@
           "energy_primary_dhw": "Primary energy used for hot water. Optional.",
           "energy_thermal_heating": "Thermal energy delivered for heating. Optional.",
           "energy_thermal_dhw": "Thermal energy delivered for hot water. Optional.",
-          "energy_electrical_total": "Total electrical energy used. Optional."
+          "energy_electrical_total": "Total electrical energy used. Optional.",
+          "fault_codes": "The entity that shows the fault codes of the heat generator. Read only. Optional."
         }
       },
       "benachrichtigung": {
@@ -262,7 +264,6 @@
     },
     "hinweise": {
       "options": {
-        "raumfuehler": "Room sensor",
         "batterie": "Battery",
         "manueller_eingriff": "Manual intervention",
         "quellwechsel": "Source change",

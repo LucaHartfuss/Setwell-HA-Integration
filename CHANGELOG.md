@@ -5,6 +5,11 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 ## Unveröffentlicht
 
+- Push-Regeln: das Tageslimit für orange Meldungen liegt jetzt bei 1 bis 5 (bisher 1 bis 50); ein Wert außerhalb fällt
+  wie bisher auf den Standard 5 zurück, ohne das Ereignis abzulehnen. Ruhezeit-Standard bleibt 22 bis 7 Uhr.
+- Die Auswahl „Hinweise ohne Push“ bietet die Art „Raumfühler“ nicht mehr an: Meldungen zu Raumfühlern lassen sich
+  nicht mehr abschalten. Eine Anlage mit `raumfuehler` in `hinweise_aus` wird vom Server nach dem Update abgelehnt und
+  muss in der Einrichtung einmal neu bestätigt werden.
 - Neue Option am Eintrag „Gerät zusätzlich aus dem Konto lösen“ (Vorgabe aus). Ist sie gesetzt, schreibt das Löschen des
   Eintrags `entfernen <Geräte-ID> freigeben` an das Add-on, und das Gerät verlässt nach der lokalen Abmeldung das Konto
   (das Add-on meldet es dem Server). Ohne die Option bleibt es im Konto und lässt sich im Portal entfernen.

@@ -284,7 +284,7 @@ PUSH_CODES = {
 }
 # Vorgaben und Grenzen der Regeln aus dem Status-Ereignis (Ruhezeit in Ortsstunden, Limit je Tag fuer Orange).
 PUSH_RUHE_VON, PUSH_RUHE_BIS, PUSH_TAGESLIMIT = 22, 7, 5
-PUSH_TAGESLIMIT_MIN, PUSH_TAGESLIMIT_MAX = 1, 50
+PUSH_TAGESLIMIT_MIN, PUSH_TAGESLIMIT_MAX = 1, 5
 PUSH_WIEDERHOLUNG_SECONDS = 24 * 3600  # Erinnerung an offenes Rot und Frist fuer Wiederholungen nach einem Fehlschlag
 PUSH_VERSUCH_ABSTAND_SECONDS = 300
 PUSH_TAKT_SECONDS = 60
