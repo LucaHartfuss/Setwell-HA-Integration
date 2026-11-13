@@ -121,11 +121,11 @@ async def test_die_diagnose_zeigt_den_erlaubten_inhalt_und_sonst_nichts(hass, cl
                 {"kreis": 1, "name": "Kreis 1", "raum_soll": 21.0, "raum_ist": 20.5, "einlernphase_tag": 3,
                  "testphase_bis": None, "befunde": 1, "boost": "keiner", "hebelsatz": "vaillant_vrc720",
                  "hebel": {"curve": 1.2, "heat_limit": None}, "gelernt": {"curve": 1.1}, "abo": "aktiv",
-                 "abo_frist_ende": None, "zustand": "heizt", "kaelteschutz": "aus"},
+                 "abo_frist_ende": None, "zustand": "heizt", "kaelteschutz": "aus", "abwesend": True},
                 {"kreis": 2, "name": "Kreis 2", "raum_soll": 21.0, "raum_ist": 20.5, "einlernphase_tag": 3,
                  "testphase_bis": None, "befunde": 1, "boost": "keiner", "hebelsatz": "vaillant_vrc720",
                  "hebel": {"curve": 1.2, "heat_limit": None}, "gelernt": {"curve": 1.1}, "abo": "aktiv",
-                 "abo_frist_ende": None, "zustand": "abwesend", "kaelteschutz": "aus"},
+                 "abo_frist_ende": None, "zustand": "abwesend", "kaelteschutz": "aus", "abwesend": False},
             ],
         },
     }

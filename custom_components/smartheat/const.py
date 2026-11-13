@@ -24,7 +24,7 @@ STATUS_EVENT_FIELDS = (
 )
 STATUS_KREIS_FIELDS = (
     "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "boost",
-    "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz",
+    "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz", "abwesend",
 )
 # Lebenszeichen der Integration an das Add-on (Vertrag V5). Der Kern -- Name, Typ und Bedeutung dieser drei Felder --
 # bleibt in jedem kuenftigen Schema gleich, damit jedes Add-on Version und gelesene Schemata der Integration lesen kann.
@@ -167,6 +167,12 @@ WUNSCH_EVENT = "smartheat_wunsch"
 # Daten des Wunsch-Ereignisses: schema, kreis (Pflicht, ab 1) und raum_soll; ohne gueltigen Kreis verwirft das Add-on es.
 WUNSCH_EVENT_SCHEMA = 4
 RAUM_SOLL_MIN, RAUM_SOLL_MAX, RAUM_SOLL_STEP = 15.0, 25.0, 0.5
+# Abwesenheit je Kreis (Vertrag V5): `smartheat_abwesend` {schema, kreis, bis, temp?} setzt sie, `smartheat_abwesend_ende`
+# {schema, kreis} beendet sie. `bis` ist ein Zeitpunkt in UTC (ISO 8601), hoechstens ABWESEND_MAX_TAGE Tage voraus; die
+# Temperatur liegt im Bedienbereich des Wunschs (RAUM_SOLL_*). Das Add-on prueft erneut und fuehrt aus.
+ABWESEND_EVENT = "smartheat_abwesend"
+ABWESEND_ENDE_EVENT = "smartheat_abwesend_ende"
+ABWESEND_MAX_TAGE = 365
 # Grenzen der Auswahl im Assistenten: Kopie von heizungsserver einrichtung/ha.py MAX_RAUMFUEHLER,
 # MAX_BATTERIEN, MAX_HANDYS (V3, Contract-Check 76); mehr lehnt der Server mit 400 ab.
 EINRICHTUNG_MAX_RAUMFUEHLER = 8

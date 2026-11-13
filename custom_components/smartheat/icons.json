@@ -38,14 +38,22 @@
       "niveau": {"default": "mdi:stairs"},
       "raum_soll": {"default": "mdi:thermostat"},
       "gelernte_steigung": {"default": "mdi:school-outline"},
-      "gelernte_heizgrenze": {"default": "mdi:school-outline"}
+      "gelernte_heizgrenze": {"default": "mdi:school-outline"},
+      "zurueck_am": {"default": "mdi:calendar-arrow-right"}
     },
     "binary_sensor": {
       "notbetrieb": {"default": "mdi:alert-outline"},
-      "server_verbunden": {"default": "mdi:cloud-off-outline", "state": {"on": "mdi:cloud-check-outline"}}
+      "server_verbunden": {"default": "mdi:cloud-off-outline", "state": {"on": "mdi:cloud-check-outline"}},
+      "abwesend": {"default": "mdi:home-outline", "state": {"on": "mdi:home-export-outline"}}
+    },
+    "button": {
+      "abwesenheit_beenden": {"default": "mdi:home-import-outline"}
     },
     "number": {
       "wunschtemperatur": {"default": "mdi:thermostat"}
     }
+  },
+  "services": {
+    "abwesend_bis": {"service": "mdi:home-export-outline"}
   }
 }

@@ -12,7 +12,9 @@ def test_status_event_schema_4_separates_the_plant_from_the_circuits():
         "konfig_version", "mindest_integration", "benachrichtigung", "hinweise_aus", "push_regeln", "kreise")
     assert const.STATUS_KREIS_FIELDS == (
         "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "boost",
-        "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz")
+        "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz", "abwesend")
+    assert (const.ABWESEND_EVENT, const.ABWESEND_ENDE_EVENT, const.ABWESEND_MAX_TAGE) == (
+        "smartheat_abwesend", "smartheat_abwesend_ende", 365)
     assert set(const.KREIS_ZUSTAND_VALUES) >= {"regelt", "abo_inaktiv", "abo_beendet", "testphase", "ausser_betrieb", "heizt_auf"}
     assert const.KAELTESCHUTZ_VALUES == ("aus", "soll", "frost")
 
