@@ -1,8 +1,11 @@
 """Reparatur-Hinweise aus den Meldungen des Geraets: je Schluessel ein nicht behebbares Issue; bekannte Schluessel mit
-eigenem Text, andere mit dem allgemeinen Geraete-Hinweis. Der Text im Issue ist vorerst der Code der Meldung (die
-Uebersetzung je Code folgt); die Parameter bleiben draussen. Verschwindet ein Schluessel, verschwindet das Issue. Kein
+eigenem Text, andere mit dem allgemeinen Geraete-Hinweis. Der Text im Issue ist, ausser bei den Codes der Weiche
+(`_issue_text`: Mindestversion mit Datum, Frische der Software mit Grund), vorerst der Code der Meldung (die
+Uebersetzung je Code folgt); sonstige Parameter bleiben draussen. Verschwindet ein Schluessel, verschwindet das Issue. Kein
 Fix-Flow (alle Issues sind nicht behebbar); HA laedt dieses Modul als repairs-Plattform nur fuer behebbare Issues."""
 from __future__ import annotations
+
+from datetime import date
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -15,12 +18,22 @@ from .const import (
     HINWEIS_SAMMEL_KEY,
     HINWEISE_MAX,
     ISSUE_OHNE_VERSION,
+    ISSUE_UPDATE_NOETIG_ENDE,
+    ISSUE_UPDATE_NOETIG_UNBEKANNT,
+    ISSUE_UPDATES_VERALTET,
     MELDUNG_CODE_RE,
+    MELDUNG_DATUM_RE,
     MELDUNG_FELD_CODE,
     MELDUNG_FELD_KEY,
+    MELDUNG_FELD_PARAMS,
     MELDUNG_FELD_STUFE,
+    MELDUNG_GRUND_RE,
+    MELDUNG_GRUND_UNBEKANNT,
     MELDUNG_KEY_RE,
     MELDUNG_STUFEN,
+    MELDUNG_UPDATE_NOETIG,
+    MELDUNG_UPDATE_NOETIG_UNBEKANNT,
+    MELDUNG_UPDATES_VERALTET,
     MINDEST_INTEGRATION_RE,
     STATUS_ADDON_MEHRFACH,
     STATUS_INTEGRATION_VERALTET,
@@ -47,6 +60,42 @@ def _code_text(meldung: dict) -> str:
     return klartext(code) if isinstance(code, str) and MELDUNG_CODE_RE.fullmatch(code) else ""
 
 
+def _parameter(meldung: dict, name: str) -> object:
+    params = meldung.get(MELDUNG_FELD_PARAMS)
+    return params.get(name) if isinstance(params, dict) else None
+
+
+def _datum(wert: object, sprache: str) -> str | None:
+    """Ein Datum der Form JJJJ-MM-TT, das es gibt, in der Schreibweise der UI-Sprache (deutsch TT.MM.JJJJ, sonst
+    ISO); alles andere ergibt kein Datum."""
+    if not isinstance(wert, str) or MELDUNG_DATUM_RE.fullmatch(wert) is None:
+        return None
+    try:
+        tag = date.fromisoformat(wert)
+    except ValueError:
+        return None
+    return tag.strftime("%d.%m.%Y") if sprache.startswith("de") else tag.isoformat()
+
+
+def _issue_text(hass: HomeAssistant, key: str, meldung: dict) -> tuple[str, dict[str, str]]:
+    """Schluessel der Uebersetzung und Platzhalter des Issues. Die Codes der Weiche haben eigene Texte (mit Datum
+    bzw. Grund); ein unlesbares Datum ergibt den Text ohne Datum, ein unlesbarer Grund `unbekannt`. Jeder andere Code
+    zeigt den Text seines Schluessels, bei unbekanntem Schluessel den allgemeinen Hinweis."""
+    code = meldung.get(MELDUNG_FELD_CODE)
+    if code == MELDUNG_UPDATE_NOETIG:
+        ende = _datum(_parameter(meldung, "ende"), hass.config.language)
+        if ende is not None:
+            return ISSUE_UPDATE_NOETIG_ENDE, {"ende": ende}
+        return ISSUE_UPDATE_NOETIG_UNBEKANNT, {}
+    if code == MELDUNG_UPDATE_NOETIG_UNBEKANNT:
+        return ISSUE_UPDATE_NOETIG_UNBEKANNT, {}
+    if code == MELDUNG_UPDATES_VERALTET:
+        grund = _parameter(meldung, "grund")
+        gueltig = isinstance(grund, str) and MELDUNG_GRUND_RE.fullmatch(grund) is not None
+        return ISSUE_UPDATES_VERALTET, {"grund": klartext(grund) if gueltig else MELDUNG_GRUND_UNBEKANNT}
+    return key if key in HINWEIS_KEYS else GERAET_HINWEIS, {"text": _code_text(meldung)}
+
+
 def async_update(hass: HomeAssistant, meldungen: list[dict]) -> None:
     """Issues `hinweis_…` auf den Stand von `meldungen` bringen; Eintraege ohne Schluessel oder mit einem Schluessel,
     der keiner ist, ignorieren (die Issue-ID steht im Diagnose-Download und darf keinen freien Text tragen; ihre
@@ -67,11 +116,12 @@ def async_update(hass: HomeAssistant, meldungen: list[dict]) -> None:
     for issue_id, (key, meldung) in ausgewaehlt[:HINWEISE_MAX]:
         aktuell.add(issue_id)
         severity = ir.IssueSeverity.ERROR if meldung.get(MELDUNG_FELD_STUFE) == _ROT else ir.IssueSeverity.WARNING
+        translation_key, platzhalter = _issue_text(hass, key, meldung)
         ir.async_create_issue(
             hass, DOMAIN, issue_id, is_fixable=False,
             severity=severity,
-            translation_key=key if key in HINWEIS_KEYS else GERAET_HINWEIS,
-            translation_placeholders={"text": _code_text(meldung)},
+            translation_key=translation_key,
+            translation_placeholders=platzhalter or None,
         )
     ueberzaehlig = len(ausgewaehlt) - HINWEISE_MAX
     if ueberzaehlig > 0:
