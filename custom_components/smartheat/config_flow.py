@@ -27,7 +27,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant.components.hassio import AddonError
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -76,6 +76,7 @@ from .const import (
     INVENTUR_WAIT_SECONDS,
     MIN_ADDON_VERSIONS,
     NACHWEIS_WAIT_SECONDS,
+    OPTION_GERAET_FREIGEBEN,
     POLL_SECONDS,
     RAUM_SOLL_MAX,
     RAUM_SOLL_MIN,
@@ -220,9 +221,26 @@ def _vorbelegt(key: str, default: Any, *, required: bool = True) -> vol.Marker:
     return vol.Optional(key, description={"suggested_value": default})
 
 
+class SmartHeatOptionsFlow(OptionsFlow):
+    """Eine einzige Wahl: beim Entfernen des Eintrags die Freigabe aus dem Konto anfragen (Vorgabe aus). Sie wird nur beim
+    Loeschen gelesen (`async_remove_entry`); kein Server-Aufruf, kein Neuladen."""
+
+    async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
+        if user_input is not None:
+            return self.async_create_entry(data={OPTION_GERAET_FREIGEBEN: bool(user_input[OPTION_GERAET_FREIGEBEN])})
+        aktuell = self.config_entry.options.get(OPTION_GERAET_FREIGEBEN) is True
+        return self.async_show_form(step_id="init", data_schema=vol.Schema({
+            vol.Optional(OPTION_GERAET_FREIGEBEN, default=aktuell): bool}))
+
+
 class SmartHeatConfigFlow(ProgressFlowMixin, ConfigFlow, domain=DOMAIN):
     # 3 = Eintrag ab 1.0.0 (Geraete-ID).
     VERSION = 3
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> SmartHeatOptionsFlow:
+        return SmartHeatOptionsFlow()
 
     def __init__(self) -> None:
         self._client: EinrichtungClient | None = None

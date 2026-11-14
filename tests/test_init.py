@@ -139,8 +139,8 @@ LOGGER_ADDON_CONTROL = "custom_components.smartheat.addon_control"
 
 async def _hinweis_setzen(hass):
     """Das Status-Ereignis muss die Geraete-ID des Eintrags tragen (sonst ignoriert ihn der Koordinator)."""
-    hass.bus.async_fire(STATUS_EVENT, status_event("wohnung1", "regelt", geraet_id=GUELTIG, geraet_hinweise=[
-        {"key": "geraet_doppelt", "stufe": "kritisch", "text": "Zweite Instanz"}]))
+    hass.bus.async_fire(STATUS_EVENT, status_event("wohnung1", "regelt", geraet_id=GUELTIG, meldungen=[
+        {"key": "geraet_doppelt", "code": "meldung.geraet_doppelt", "params": {}, "stufe": "rot"}]))
     await hass.async_block_till_done()
     assert ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_geraet_doppelt") is not None
 
@@ -164,6 +164,31 @@ async def test_removing_the_entry_signs_the_device_off_through_stdin(hass, super
     assert [(addon.slug, addon.state) for addon in supervisor.installed] == [(BRIDGE_SLUG, AddonState.STARTED)]
     assert ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_geraet_doppelt") is None
     assert [r for r in caplog.records if r.name == LOGGER_ADDON_CONTROL] == []
+
+
+async def test_die_option_geraet_freigeben_haengt_die_wahl_an_die_stdin_zeile(hass, supervisor, aioclient_mock):
+    """Ist die Option gesetzt, schreibt das Loeschen `entfernen <geraet_id> freigeben`; sonst bleibt es bei der
+    einfachen Zeile (Vorgabe: das Geraet bleibt im Konto). Kein Server-Aufruf."""
+    entry = await _setup(hass, geraet_id=GUELTIG)
+    hass.config_entries.async_update_entry(entry, options={"geraet_freigeben": True})
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert supervisor.stdin == [(BRIDGE_SLUG, b"entfernen shg-aaaaaaaaaaaaaaaa freigeben\n\n")]
+    assert aioclient_mock.call_count == 0
+
+
+@pytest.mark.parametrize("optionen", [{}, {"geraet_freigeben": False}, {"geraet_freigeben": "ja"},
+                                      {"geraet_freigeben": 1}], ids=["leer", "falsch", "text", "zahl"])
+async def test_nur_ein_echtes_true_gibt_das_geraet_frei(hass, supervisor, optionen):
+    entry = await _setup(hass, geraet_id=GUELTIG)
+    hass.config_entries.async_update_entry(entry, options=optionen)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert supervisor.stdin == [(BRIDGE_SLUG, b"entfernen shg-aaaaaaaaaaaaaaaa\n\n")]
 
 
 def _bruecke_fehlt(supervisor):
@@ -280,8 +305,8 @@ async def test_an_entry_from_before_1_0_is_not_migrated(hass):
 async def test_unloading_clears_the_hint_issues(hass):
     """Ein deaktivierter Eintrag hinterlaesst keine veralteten Hinweise."""
     entry = await _setup(hass)
-    hass.bus.async_fire(STATUS_EVENT, status_event("wohnung1", "regelt", geraet_hinweise=[
-        {"key": "wunsch_begrenzt", "stufe": "warnung", "text": "Auf 25 °C begrenzt"}]))
+    hass.bus.async_fire(STATUS_EVENT, status_event("wohnung1", "regelt", meldungen=[
+        {"key": "wunsch_begrenzt", "code": "meldung.wunsch_begrenzt", "params": {}, "stufe": "orange"}]))
     await hass.async_block_till_done()
     assert ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_wunsch_begrenzt") is not None
 

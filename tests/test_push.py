@@ -426,7 +426,7 @@ async def test_switched_off_hints_are_silent_below_red_but_never_for_red(push, d
 # --- Regeln ---
 
 @pytest.mark.parametrize("regeln", [
-    None, {}, "22-7", [], 5, {"tageslimit": 0}, {"tageslimit": 51}, {"tageslimit": -3}, {"tageslimit": True},
+    None, {}, "22-7", [], 5, {"tageslimit": 0}, {"tageslimit": 6}, {"tageslimit": 50}, {"tageslimit": -3}, {"tageslimit": True},
     {"tageslimit": "9"}, {"tageslimit": 2.5}, {"ruhe_von": 22, "ruhe_bis": 22}, {"ruhe_von": 24, "ruhe_bis": 7},
     {"ruhe_von": -1, "ruhe_bis": 7}, {"ruhe_von": "22", "ruhe_bis": 7}, {"ruhe_von": 22}, {"ruhe_bis": 7},
     {"ruhe_von": True, "ruhe_bis": False}, {"ruhe_von": 22, "ruhe_bis": 99},
@@ -446,8 +446,8 @@ async def test_rules_that_are_missing_or_out_of_range_fall_back_to_22_to_7_and_f
 
 
 @pytest.mark.parametrize("regeln", [
-    {"ruhe_von": 0, "ruhe_bis": 23, "tageslimit": 1}, {"ruhe_von": 23, "ruhe_bis": 0, "tageslimit": 50},
-    {"ruhe_von": 1, "ruhe_bis": 2, "tageslimit": 7},
+    {"ruhe_von": 0, "ruhe_bis": 23, "tageslimit": 1}, {"ruhe_von": 23, "ruhe_bis": 0, "tageslimit": 5},
+    {"ruhe_von": 1, "ruhe_bis": 2, "tageslimit": 4},
 ])
 async def test_rules_inside_the_range_are_taken(push, regeln):
     assert push.ziele_setzen([DIENST], [], regeln) is False  # gleiche Ziele: nichts zu tun

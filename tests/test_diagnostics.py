@@ -79,7 +79,8 @@ def _ereignis(**overrides):
         "hinweise": {"batterie_niedrig": [GEHEIM["entity_batterie"]],
                      "raumfuehler_ausgefallen": [GEHEIM["entity_fuehler"], "sensor.zweiter"],
                      "manueller_eingriff": {"entity": GEHEIM["entity_zuordnung"]}},
-        "geraet_hinweise": [{"key": "wunsch_begrenzt", "stufe": "warnung", "text": GEHEIM["hinweistext"]}],
+        "meldungen": [{"key": "wunsch_begrenzt", "code": "meldung.wunsch_begrenzt", "params": {"wert": 25},
+                       "stufe": "orange"}],
         "mindest_integration": "1.0.0",
         **overrides,
     }
@@ -115,7 +116,7 @@ async def test_die_diagnose_zeigt_den_erlaubten_inhalt_und_sonst_nichts(hass, cl
             "schema": 4, "status": "regelt", "grund": None, "geraet_zustand": "regelt", "server_verbunden": True,
             "notbetrieb": False, "datenfehler": None, "letzte_serverantwort": "2026-11-11T08:00:00+00:00",
             "hinweise": {"raumfuehler_ausgefallen": 2, "batterie_niedrig": 1, "manueller_eingriff": True},
-            "geraet_hinweise": [{"key": "wunsch_begrenzt", "stufe": "warnung"}],
+            "meldungen": [{"key": "wunsch_begrenzt", "code": "meldung.wunsch_begrenzt", "stufe": "orange"}],
             "kreise": [
                 {"kreis": 1, "name": "Kreis 1", "raum_soll": 21.0, "raum_ist": 20.5, "einlernphase_tag": 3,
                  "testphase_bis": None, "befunde": 1, "boost": "keiner", "hebelsatz": "vaillant_vrc720",
@@ -171,6 +172,27 @@ async def test_freier_text_in_einem_codefeld_wird_nicht_uebernommen(hass, clock,
     assert diagnose["status"][feld] is None
 
 
+async def test_der_grund_erscheint_als_code_ohne_parameter(hass, clock):
+    """Der Grund kommt als Objekt aus Code und Parametern; heraus kommt nur der Code (die Parameter bleiben draussen)."""
+    grund = {"code": "status.grund_kein_server", "params": {"wert": GEHEIM["hinweistext"]}}
+    entry = await _laufend(hass, _ereignis(grund=grund))
+
+    diagnose = await async_get_config_entry_diagnostics(hass, entry)
+
+    assert diagnose["status"]["grund"] == "status.grund_kein_server"
+    assert GEHEIM["hinweistext"] not in _text(diagnose)
+
+
+@pytest.mark.parametrize("grund", [{"code": GEHEIM["hinweistext"], "params": {}}, {"params": {}}, {"code": 5}])
+async def test_ein_grund_ohne_gueltigen_code_ergibt_nichts(hass, clock, grund):
+    entry = await _laufend(hass, _ereignis(grund=grund))
+
+    diagnose = await async_get_config_entry_diagnostics(hass, entry)
+
+    assert diagnose["status"]["grund"] is None
+    assert GEHEIM["hinweistext"] not in _text(diagnose)
+
+
 async def test_der_datenfehler_erscheint_als_art_ohne_rollen(hass, clock):
     """Das Add-on meldet den Datenfehler als Objekt: nur die Art kommt als Code heraus."""
     entry = await _laufend(hass, _ereignis(datenfehler={"art": "lokal", "rollen": [GEHEIM["entity_fuehler"]]}))
@@ -197,9 +219,9 @@ async def test_der_echte_download_enthaelt_nur_die_positivliste_auch_bei_den_iss
     (Issue-ID und Platzhalter)."""
     entry = await _laufend(hass, _ereignis(
         datenfehler={"art": "server", "rollen": [GEHEIM["entity_fuehler"]]},
-        geraet_hinweise=[
-            {"key": "wunsch_begrenzt", "stufe": "warnung", "text": GEHEIM["hinweistext"]},
-            {"key": GEHEIM["hinweistext"], "stufe": "kritisch", "text": GEHEIM["hinweistext"]},
+        meldungen=[
+            {"key": "wunsch_begrenzt", "code": "meldung.wunsch_begrenzt", "params": {}, "stufe": "orange"},
+            {"key": GEHEIM["hinweistext"], "code": GEHEIM["hinweistext"], "params": {}, "stufe": "rot"},
         ]))
 
     antwort = await _download(hass, hass_client, entry)
@@ -285,17 +307,17 @@ async def test_die_geraete_id_wird_auf_shg_und_sechs_zeichen_gekuerzt(hass, cloc
 
 def _hinweise(anzahl: int, kreis: int | None = None) -> list[dict]:
     praefix = "" if kreis is None else f"k{kreis}_"
-    return [{"key": f"{praefix}fuehler_{GEHEIM['geraet_rest']}_{nummer}", "stufe": "warnung",
-             "text": GEHEIM["hinweistext"]} for nummer in range(anzahl)]
+    return [{"key": f"{praefix}fuehler_{GEHEIM['geraet_rest']}_{nummer}", "code": "meldung.fuehler",
+             "params": {}, "stufe": "orange"} for nummer in range(anzahl)]
 
 
 async def test_offene_meldungen_erscheinen_als_code_und_kreis_ohne_id_und_namen(hass, clock):
     """Ein Hinweis mit Kreis und Fuehlername im Schluessel, ein bekannter Hinweis und ein Waechterbefund: die Diagnose
     nennt nur Code und Kreisnummer, nie die Issue-ID (sie traegt den Hash des Schluessels), den Schluessel oder den Text."""
     fuehler = "k2_raumfuehler_sensor_kinderzimmer"
-    entry = await _laufend(hass, _ereignis(geraet_hinweise=[
-        {"key": fuehler, "stufe": "kritisch", "text": GEHEIM["hinweistext"]},
-        {"key": "wunsch_begrenzt", "stufe": "warnung", "text": GEHEIM["hinweistext"]},
+    entry = await _laufend(hass, _ereignis(meldungen=[
+        {"key": fuehler, "code": "meldung.fuehler", "params": {}, "stufe": "rot"},
+        {"key": "wunsch_begrenzt", "code": "meldung.wunsch_begrenzt", "params": {}, "stufe": "orange"},
     ]))
     entry.runtime_data._set_watchdog_status("addon_gestoppt")
 
@@ -314,14 +336,14 @@ async def test_offene_meldungen_erscheinen_als_code_und_kreis_ohne_id_und_namen(
 
 
 async def test_ohne_offene_meldungen_ist_die_liste_leer(hass, clock):
-    entry = await _laufend(hass, _ereignis(geraet_hinweise=[]))
+    entry = await _laufend(hass, _ereignis(meldungen=[]))
 
     assert (await async_get_config_entry_diagnostics(hass, entry))["meldungen"] == {"anzahl": 0, "offen": []}
 
 
 async def test_die_liste_der_meldungen_ist_begrenzt_die_anzahl_nicht(hass, clock):
     """Eine Flut offener Meldungen blaeht die Diagnose nicht auf; die Anzahl bleibt wahr."""
-    entry = await _laufend(hass, _ereignis(geraet_hinweise=_hinweise(40, kreis=1)))
+    entry = await _laufend(hass, _ereignis(meldungen=_hinweise(40, kreis=1)))
 
     meldungen = (await async_get_config_entry_diagnostics(hass, entry))["meldungen"]
 
@@ -331,7 +353,7 @@ async def test_die_liste_der_meldungen_ist_begrenzt_die_anzahl_nicht(hass, clock
 
 
 async def test_das_sammel_issue_zaehlt_mit_und_jeder_eintrag_hat_nur_code_und_kreis(hass, clock):
-    entry = await _laufend(hass, _ereignis(geraet_hinweise=_hinweise(60)))
+    entry = await _laufend(hass, _ereignis(meldungen=_hinweise(60)))
 
     meldungen = (await async_get_config_entry_diagnostics(hass, entry))["meldungen"]
 
@@ -351,7 +373,7 @@ async def test_die_zeitstempel_der_diagnose_bleiben_neben_den_meldungen(hass, cl
 
 
 async def test_fremde_issues_anderer_integrationen_erscheinen_nicht(hass, clock):
-    entry = await _laufend(hass, _ereignis(geraet_hinweise=[]))
+    entry = await _laufend(hass, _ereignis(meldungen=[]))
     ir.async_create_issue(hass, "andere", "fremd", is_fixable=False, severity=ir.IssueSeverity.WARNING,
                           translation_key="fremd")
 

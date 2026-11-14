@@ -17,8 +17,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    HINWEIS_FELD_KEY,
     HINWEIS_SOLL_QUELLE_AUS,
+    MELDUNG_FELD_KEY,
     RAUM_SOLL_MAX,
     RAUM_SOLL_MIN,
     RAUM_SOLL_STEP,
@@ -79,8 +79,8 @@ class WunschtemperaturEntity(SmartHeatEntity, NumberEntity):
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key=STATUS_ADDON_FEHLT)
         if self.coordinator.watchdog_status in (STATUS_ADDON_GESTOPPT, STATUS_REAGIERT_NICHT):
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="addon_nicht_bereit")
-        hinweise = (self.coordinator.data or {}).get("geraet_hinweise") or []
-        if any(isinstance(h, dict) and h.get(HINWEIS_FELD_KEY) == HINWEIS_SOLL_QUELLE_AUS for h in hinweise):
+        meldungen = (self.coordinator.data or {}).get("meldungen") or []
+        if any(isinstance(m, dict) and m.get(MELDUNG_FELD_KEY) == HINWEIS_SOLL_QUELLE_AUS for m in meldungen):
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="thermostat_aus")
         raum_soll = _auf_schritt(float(value))
         # Keine eigene Anzeige des gesetzten Werts: sie folgt dem naechsten Status-Ereignis (das Add-on sendet nur bei

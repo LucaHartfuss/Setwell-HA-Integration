@@ -27,6 +27,8 @@ _.async_step_zuordnung_aendern  # Config-Flow-Schritt: HA springt ihn per step_i
 _.async_step_geraet_entfernen  # Config-Flow-Schritt: HA springt ihn per step_id an (Formular, Menue, Fortschritt)
 _.async_step_entfernt  # Config-Flow-Schritt: HA springt ihn per step_id an (Formular, Menue, Fortschritt)
 _.async_step_entfernen_laeuft  # Config-Flow-Schritt: HA springt ihn per step_id an (Formular, Menue, Fortschritt)
+_.async_get_options_flow  # HA-Hook: Optionen-Dialog des Eintrags (Wahl beim Entfernen)
+_.async_step_init  # Options-Flow-Schritt: HA startet ihn mit step_id init
 
 # Entity-Attribute und -Methoden: HA liest _attr_* ueber die Properties der Basisklassen.
 _._attr_unique_id  # HA-Entity-Attribut (Entity.unique_id)

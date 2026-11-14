@@ -56,7 +56,7 @@ ZUORDNUNG = {
     "raumfuehler": {"kandidaten": ["sensor.wohnzimmer_temperatur", "climate.wohnzimmer_thermostat"], "vorschlag": []},
     "room_target": {"kandidaten": ["sensor.wohnzimmer_temperatur", "climate.wohnzimmer_thermostat"], "vorschlag": None},
     "batterie_je_entity": {"climate.wohnzimmer_thermostat": "sensor.wohnzimmer_batterie"},
-    "benachrichtigung": ["notify.mobile_app_handy"], "hinweise": ["raumfuehler", "batterie"], "raum_soll": 20.0,
+    "benachrichtigung": ["notify.mobile_app_handy"], "hinweise": ["batterie"], "raum_soll": 20.0,
     "abfrage_s": 1800, "hinweis": None,
 }
 

@@ -5,6 +5,23 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 ## Unveröffentlicht
 
+- Die Option beim Entfernen des Eintrags heißt jetzt „Zusätzlich die Freigabe aus dem Konto anfragen“: das Gerät löst sich
+  nicht mehr selbst aus dem Konto, es fragt die Freigabe an und bleibt im Konto, bis der Eigentümer sie im Portal
+  bestätigt (er bekommt eine Nachricht). Das Verhalten der Integration ist unverändert, nur der Text der Option.
+- Das Status-Ereignis des Add-ons trägt die Meldungen des Geräts jetzt als `meldungen` (Schlüssel, Code, Parameter,
+  Kreis, Stufe rot, orange oder gelb) ohne Text, dazu die Push-Regeln als `push_regeln`; `geraet_hinweise` entfällt. Der
+  Grund des Status kommt als Code mit Parametern. Die Integration liest den Code und zeigt die Meldungen als Reparatur-
+  hinweise (rot als Fehler, sonst als Warnung); ein Add-on mit alter Form liefert keinen Grund und keine Meldungen. Die
+  Diagnose gibt Schlüssel, Code und Stufe der Meldungen aus, nie deren Parameter. Die Texte je Code folgen mit den
+  Übersetzungen; bis dahin steht der Code lesbar im Hinweis.
+- Push-Regeln: das Tageslimit für orange Meldungen liegt jetzt bei 1 bis 5 (bisher 1 bis 50); ein Wert außerhalb fällt
+  wie bisher auf den Standard 5 zurück, ohne das Ereignis abzulehnen. Ruhezeit-Standard bleibt 22 bis 7 Uhr.
+- Die Auswahl „Hinweise ohne Push“ bietet die Art „Raumfühler“ nicht mehr an: Meldungen zu Raumfühlern lassen sich
+  nicht mehr abschalten. Eine Anlage mit `raumfuehler` in `hinweise_aus` wird vom Server nach dem Update abgelehnt und
+  muss in der Einrichtung einmal neu bestätigt werden.
+- Neue Option am Eintrag „Gerät zusätzlich aus dem Konto lösen“ (Vorgabe aus). Ist sie gesetzt, schreibt das Löschen des
+  Eintrags `entfernen <Geräte-ID> freigeben` an das Add-on, und das Gerät verlässt nach der lokalen Abmeldung das Konto
+  (das Add-on meldet es dem Server). Ohne die Option bleibt es im Konto und lässt sich im Portal entfernen.
 - Mindestversion der Integration: Nennt das Add-on in seinem Ereignis eine `mindest_integration`, die über der
   eigenen Version liegt (verglichen werden die drei Zahlen), zeigt die Integration `integration_veraltet` mit
   Reparatur-Hinweis und der Mindestversion. Gleichstand, eine niedrigere, fehlende oder unlesbare Angabe ergeben nie

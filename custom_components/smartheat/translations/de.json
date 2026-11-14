@@ -100,7 +100,8 @@
           "energy_primary_dhw": "Energie: Primärenergie Warmwasser (optional)",
           "energy_thermal_heating": "Energie: Wärme Heizen (optional)",
           "energy_thermal_dhw": "Energie: Wärme Warmwasser (optional)",
-          "energy_electrical_total": "Energie: Strom gesamt (optional)"
+          "energy_electrical_total": "Energie: Strom gesamt (optional)",
+          "fault_codes": "Störungscodes (optional)"
         },
         "data_description": {
           "curve": "Die Entity, die die Steigung der Heizkurve hält. SmartHeat passt sie an.",
@@ -127,7 +128,8 @@
           "energy_primary_dhw": "Primärenergie, die fürs Warmwasser verbraucht wird. Optional.",
           "energy_thermal_heating": "Wärmeenergie, die fürs Heizen abgegeben wird. Optional.",
           "energy_thermal_dhw": "Wärmeenergie, die fürs Warmwasser abgegeben wird. Optional.",
-          "energy_electrical_total": "Gesamte verbrauchte elektrische Energie. Optional."
+          "energy_electrical_total": "Gesamte verbrauchte elektrische Energie. Optional.",
+          "fault_codes": "Die Entity, die die Störungscodes des Wärmeerzeugers zeigt. Nur lesend. Optional."
         }
       },
       "benachrichtigung": {
@@ -241,6 +243,16 @@
       "reconfigure_successful": "Die neue Zuordnung ist übernommen."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Beim Entfernen des Geräts",
+        "description": "Gilt, wenn dieser Eintrag gelöscht wird. Das Gerät wird immer zuerst lokal abgemeldet.",
+        "data": {"geraet_freigeben": "Zusätzlich die Freigabe aus dem Konto anfragen"},
+        "data_description": {"geraet_freigeben": "Ist die Option an, fragt das Gerät die Freigabe an und bleibt im Konto, bis Sie sie im Portal bestätigen. Ist sie aus, bleibt das Gerät im Konto und lässt sich im Portal entfernen."}
+      }
+    }
+  },
   "selector": {
     "lever_set": {
       "options": {
@@ -252,7 +264,6 @@
     },
     "hinweise": {
       "options": {
-        "raumfuehler": "Raumfühler",
         "batterie": "Batterie",
         "manueller_eingriff": "Manueller Eingriff",
         "quellwechsel": "Quellwechsel",

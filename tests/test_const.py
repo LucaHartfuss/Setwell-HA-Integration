@@ -8,8 +8,8 @@ def test_status_event_schema_4_separates_the_plant_from_the_circuits():
     assert const.STATUS_EVENT_SCHEMA == 4
     assert const.STATUS_EVENT_FIELDS == (
         "schema", "tenant_id", "addon_version", "status", "grund", "notbetrieb", "datenfehler", "letzte_serverantwort",
-        "hinweise", "geraet_id", "geraet_zustand", "server_verbunden", "geraet_hinweise", "anlage_name",
-        "konfig_version", "mindest_integration", "benachrichtigung", "hinweise_aus", "kreise")
+        "hinweise", "geraet_id", "geraet_zustand", "server_verbunden", "meldungen", "anlage_name",
+        "konfig_version", "mindest_integration", "benachrichtigung", "hinweise_aus", "push_regeln", "kreise")
     assert const.STATUS_KREIS_FIELDS == (
         "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "boost",
         "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz")
@@ -28,8 +28,18 @@ def test_device_contract_values():
     assert const.EINRICHTUNG_ROUTEN["auftrag"] == ("GET", "/geraet/auftraege/<job_id>")
 
 
-def test_hint_fields_and_keys_follow_the_add_on_wire():
-    assert const.HINWEIS_FIELDS == ("key", "stufe", "text")
+def test_meldung_fields_and_keys_follow_the_add_on_wire():
+    assert const.MELDUNG_FIELDS == ("key", "code", "params", "kreis", "stufe")
+    assert const.MELDUNG_STUFEN == ("rot", "orange", "gelb")
+    # Codes des Katalogs tragen Punkte (`meldung.…`, `erzeuger.…`, `status.…`), ein Key `<kategorie>:<Pruefsumme>`
+    for code in ("meldung.update_noetig", "erzeuger.stoerung", "status.grund_addon_gestoppt", "abo"):
+        assert const.MELDUNG_CODE_RE.fullmatch(code)
+    for key in ("update_noetig", "raumfuehler:0123456789", "meldung:abcdef0123"):
+        assert const.MELDUNG_KEY_RE.fullmatch(key)
+    for falsch in ("Meldung.x", "meldung.", ".x", "a..b", "a b", "a.b.c.d", "a/b", "", "x" * 41, "a.é"):
+        assert const.MELDUNG_CODE_RE.fullmatch(falsch) is None, falsch
+    for falsch in ("raumfuehler:wohnzimmer", "raumfuehler:0123", "sensor.wohnzimmer", "a:0123456789:b", "Abo:0123456789"):
+        assert const.MELDUNG_KEY_RE.fullmatch(falsch) is None, falsch
     assert set(const.HINWEIS_KEYS) == {
         "wunsch_begrenzt", "soll_quelle_aus", "geraet_doppelt", "update_noetig", "gesperrt", "konfiguration_abgelehnt"}
     assert const.hinweis_issue_id("Update-Noetig") == "hinweis_update_noetig"
@@ -72,6 +82,10 @@ def test_geraetecode_fields_follow_the_server():
 def test_nachweis_contract_with_the_addon():
     assert (const.STDIN_BEFEHL_NACHWEIS, const.STDIN_BEFEHL_ENTFERNEN) == ("nachweis", "entfernen")
     assert const.STDIN_ZEILE_FORMAT.format(befehl=const.STDIN_BEFEHL_NACHWEIS, geraet_id="shg-a") == "nachweis shg-a\n"
+    assert const.STDIN_ZUSATZ_FREIGEBEN == "freigeben"
+    assert const.STDIN_ZEILE_FORMAT_FREIGEBEN.format(
+        befehl=const.STDIN_BEFEHL_ENTFERNEN, geraet_id="shg-a", zusatz=const.STDIN_ZUSATZ_FREIGEBEN) == "entfernen shg-a freigeben\n"
+    assert const.OPTION_GERAET_FREIGEBEN == "geraet_freigeben"
     assert const.NACHWEIS_EVENT == "smartheat_nachweis"
     assert const.NACHWEIS_EVENT_FIELDS == ("schema", "geraet_id", "zeitstempel", "signatur")
     assert const.NACHWEIS_EVENT_SCHEMA == 1

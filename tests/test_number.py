@@ -47,7 +47,7 @@ def _listen(hass) -> list:
 def _event(**overrides) -> dict:
     raum_soll = overrides.pop("raum_soll", 21.5)
     return {"schema": 4, "geraet_id": "shg-a", "tenant_id": "zuhause2", "status": "regelt",
-            "kreise": [{"kreis": 1, "raum_soll": raum_soll}], "geraet_hinweise": [], **overrides}
+            "kreise": [{"kreis": 1, "raum_soll": raum_soll}], "meldungen": [], **overrides}
 
 
 async def test_entity_follows_the_effective_target(hass):
@@ -257,8 +257,8 @@ async def test_a_stored_non_finite_value_is_not_restored(hass, stored):
 async def test_a_wish_is_refused_while_the_thermostat_is_off(hass):
     """5c F/Q3: das Add-on verwirft den Wunsch; die Entity sagt es sofort, statt einen Wert zu zeigen, der nie gilt."""
     await _setup(hass)
-    aus = {"key": "soll_quelle_aus", "stufe": "warnung", "text": "Thermostat aus, SmartHeat haelt 21,5 °C"}
-    hass.bus.async_fire(STATUS_EVENT, _event(geraet_hinweise=[aus]))
+    aus = {"key": "soll_quelle_aus", "code": "meldung.soll_quelle_aus", "params": {}, "stufe": "orange"}
+    hass.bus.async_fire(STATUS_EVENT, _event(meldungen=[aus]))
     await hass.async_block_till_done()
     events = _listen(hass)
     with pytest.raises(ServiceValidationError) as error:
@@ -270,8 +270,8 @@ async def test_a_wish_is_refused_while_the_thermostat_is_off(hass):
 
 async def test_a_wish_is_accepted_again_once_the_thermostat_is_on(hass):
     await _setup(hass)
-    hass.bus.async_fire(STATUS_EVENT, _event(geraet_hinweise=[{"key": "soll_quelle_aus", "stufe": "warnung",
-                                                               "text": "aus"}]))
+    hass.bus.async_fire(STATUS_EVENT, _event(meldungen=[{"key": "soll_quelle_aus", "code": "meldung.soll_quelle_aus",
+                                                         "params": {}, "stufe": "orange"}]))
     hass.bus.async_fire(STATUS_EVENT, _event())  # Hinweis wieder weg
     await hass.async_block_till_done()
     events = _listen(hass)

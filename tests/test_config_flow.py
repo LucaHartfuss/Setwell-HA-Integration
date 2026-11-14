@@ -1679,10 +1679,10 @@ async def test_reconfigure_without_a_valid_device_id_aborts_before_login(hass, s
     assert hass.config_entries.async_entries(DOMAIN) == [entry]
 
 
-async def test_there_is_no_options_dialog(hass, server):
+async def test_the_only_option_is_the_choice_when_removing(hass, server):
     entry = await _eingerichtet(hass, server)
 
-    assert not entry.supports_options
+    assert entry.supports_options
 
 
 # --- Texte ---
@@ -1726,7 +1726,8 @@ def test_every_step_error_and_abort_has_a_text(path):
             assert platzhalter in config["progress"][key], (path, key, platzhalter)
     assert "{server}" in config["progress"]["warten_eigener_server"] and "{server}" not in config["progress"]["warten"]
     assert set(config["step"]["menue"]["menu_options"]) == {"zuordnung_aendern", "geraet_entfernen"}
-    assert "options" not in data
+    assert set(data["options"]["step"]) == {"init"}
+    assert set(data["options"]["step"]["init"]["data"]) == {"geraet_freigeben"}
     for key in ("inventur_fehler", "keine_integration", "einrichten_fehler", "entfernen_fehler", "abgelehnt"):
         assert "{grund}" in config["abort"][key], (path, key)
     for key in ("uebernahme_fehlgeschlagen", "uebernahme_gesperrt", "anmeldung_gebunden"):
@@ -2345,3 +2346,18 @@ async def test_fehlt_ein_text_bleibt_der_platzhalter_ein_strich(hass, server):
     result = await _bis_anlage(hass)
 
     assert result["description_placeholders"] == {"grund": "-"}
+
+
+async def test_die_optionen_bieten_genau_die_wahl_beim_entfernen_und_speichern_sie(hass, server):
+    entry = await _eingerichtet(hass, server)
+    assert entry.options == {}
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM and result["step_id"] == "init"
+    assert list(result["data_schema"].schema) == ["geraet_freigeben"]
+    assert result["data_schema"]({}) == {"geraet_freigeben": False}  # Vorgabe: das Geraet bleibt im Konto
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {"geraet_freigeben": True})
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert entry.options == {"geraet_freigeben": True}
+    assert server.calls == []  # die Wahl ist nur lokal gespeichert
