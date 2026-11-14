@@ -248,8 +248,8 @@
       "init": {
         "title": "Beim Entfernen des Geräts",
         "description": "Gilt, wenn dieser Eintrag gelöscht wird. Das Gerät wird immer zuerst lokal abgemeldet.",
-        "data": {"geraet_freigeben": "Gerät zusätzlich aus dem Konto lösen"},
-        "data_description": {"geraet_freigeben": "Ist die Option aus, bleibt das Gerät im Konto und lässt sich im Portal entfernen."}
+        "data": {"geraet_freigeben": "Zusätzlich die Freigabe aus dem Konto anfragen"},
+        "data_description": {"geraet_freigeben": "Ist die Option an, fragt das Gerät die Freigabe an und bleibt im Konto, bis Sie sie im Portal bestätigen. Ist sie aus, bleibt das Gerät im Konto und lässt sich im Portal entfernen."}
       }
     }
   },

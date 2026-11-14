@@ -222,7 +222,7 @@ def _vorbelegt(key: str, default: Any, *, required: bool = True) -> vol.Marker:
 
 
 class SmartHeatOptionsFlow(OptionsFlow):
-    """Eine einzige Wahl: beim Entfernen des Eintrags das Geraet aus dem Konto loesen (Vorgabe aus). Sie wird nur beim
+    """Eine einzige Wahl: beim Entfernen des Eintrags die Freigabe aus dem Konto anfragen (Vorgabe aus). Sie wird nur beim
     Loeschen gelesen (`async_remove_entry`); kein Server-Aufruf, kein Neuladen."""
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:

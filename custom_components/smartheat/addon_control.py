@@ -228,9 +228,9 @@ async def async_discovery(hass: HomeAssistant) -> dict | None:
 async def async_entfernen_melden(hass: HomeAssistant, geraet_id: object, freigeben: bool = False) -> None:
     """Meldet das Geraet beim Loeschen des Eintrags ab: schreibt `entfernen <geraet_id>` als
     stdin-Zeile an die eigene Heizungsbruecke (Supervisor `write_addon_stdin`); die Bruecke meldet das Geraet lokal ab
-    (Markierung, Ursprungswerte). Mit `freigeben` haengt die Zeile die Wahl an, das Geraet danach aus dem Konto zu
-    loesen (die Bruecke meldet das dem Server selbst). Kein Server-Aufruf; ohne die Wahl entfernt der Kunde das Geraet
-    im Portal aus dem Konto. Wirft nie:
+    (Markierung, Ursprungswerte). Mit `freigeben` haengt die Zeile die Wahl an, danach die Freigabe aus dem Konto
+    anzufragen (die Bruecke meldet das dem Server selbst; das Geraet bleibt im Konto, bis der Eigentuemer im Portal
+    bestaetigt). Kein Server-Aufruf; ohne die Wahl entfernt der Kunde das Geraet im Portal aus dem Konto. Wirft nie:
     jeder Fehler (keine oder ungueltige Geraete-ID, kein Supervisor, Bruecke fehlt oder mehrfach, Supervisor-Fehler,
     Add-on gestoppt) ist eine WARNING ohne den Wert, der Eintrag wird trotzdem entfernt. `fullmatch`, damit kein
     Zeilenumbruch eine zweite Zeile einschmuggelt."""

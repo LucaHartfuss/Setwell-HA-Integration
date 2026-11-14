@@ -5,6 +5,9 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 ## Unveröffentlicht
 
+- Die Option beim Entfernen des Eintrags heißt jetzt „Zusätzlich die Freigabe aus dem Konto anfragen“: das Gerät löst sich
+  nicht mehr selbst aus dem Konto, es fragt die Freigabe an und bleibt im Konto, bis der Eigentümer sie im Portal
+  bestätigt (er bekommt eine Nachricht). Das Verhalten der Integration ist unverändert, nur der Text der Option.
 - Das Status-Ereignis des Add-ons trägt die Meldungen des Geräts jetzt als `meldungen` (Schlüssel, Code, Parameter,
   Kreis, Stufe rot, orange oder gelb) ohne Text, dazu die Push-Regeln als `push_regeln`; `geraet_hinweise` entfällt. Der
   Grund des Status kommt als Code mit Parametern. Die Integration liest den Code und zeigt die Meldungen als Reparatur-

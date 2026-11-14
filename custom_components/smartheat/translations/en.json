@@ -248,8 +248,8 @@
       "init": {
         "title": "When removing the device",
         "description": "Applies when this entry is deleted. The device is always signed off locally first.",
-        "data": {"geraet_freigeben": "Also release the device from the account"},
-        "data_description": {"geraet_freigeben": "If off, the device stays in the account and can be removed in the portal."}
+        "data": {"geraet_freigeben": "Also request release from the account"},
+        "data_description": {"geraet_freigeben": "If on, the device requests release and stays in the account until you confirm it in the portal. If off, the device stays in the account and can be removed in the portal."}
       }
     }
   },
