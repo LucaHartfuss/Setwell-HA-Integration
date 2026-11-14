@@ -374,6 +374,28 @@ async def test_the_coordinator_keeps_only_the_fields_of_the_status_event(hass, c
     assert coordinator.kreis(3) is None
 
 
+async def test_the_reason_of_the_addon_is_read_as_code_and_params(hass, clock):
+    """Der Grund des Add-ons ist ein Objekt aus Code und Parametern: der Status-Sensor zeigt den Code."""
+    await _setup(hass)
+
+    _fire(hass, status_event(TENANT, "notbetrieb", grund={"code": "status.grund_kein_server", "params": {"n": 2}}))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(STATUS).attributes["grund"] == "status.grund_kein_server"
+
+
+@pytest.mark.parametrize("grund", [None, "kein_server", {"params": {}}, {"code": "Kein Server!", "params": {}},
+                                   {"code": 5, "params": {}}, ["status.grund_x"]])
+async def test_a_reason_without_a_valid_code_is_not_shown(hass, clock, grund):
+    """Ein Grund in alter Form (Text) oder ohne gueltigen Code erscheint nicht im Sensor."""
+    await _setup(hass)
+
+    _fire(hass, status_event(TENANT, "notbetrieb", grund=grund))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(STATUS).attributes["grund"] is None
+
+
 async def test_the_coordinator_keeps_the_config_version_and_the_minimum_integration_of_the_event(hass, clock):
     """Konfigurationsversion und Mindestversion der Integration sind Anlagenfelder des Ereignisses: sie stehen in den
     Daten des Coordinators, ein Ereignis ohne sie laesst sie fehlen (kein Ersatzwert)."""

@@ -139,8 +139,8 @@ LOGGER_ADDON_CONTROL = "custom_components.smartheat.addon_control"
 
 async def _hinweis_setzen(hass):
     """Das Status-Ereignis muss die Geraete-ID des Eintrags tragen (sonst ignoriert ihn der Koordinator)."""
-    hass.bus.async_fire(STATUS_EVENT, status_event("wohnung1", "regelt", geraet_id=GUELTIG, geraet_hinweise=[
-        {"key": "geraet_doppelt", "stufe": "kritisch", "text": "Zweite Instanz"}]))
+    hass.bus.async_fire(STATUS_EVENT, status_event("wohnung1", "regelt", geraet_id=GUELTIG, meldungen=[
+        {"key": "geraet_doppelt", "code": "meldung.geraet_doppelt", "params": {}, "stufe": "rot"}]))
     await hass.async_block_till_done()
     assert ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_geraet_doppelt") is not None
 
@@ -305,8 +305,8 @@ async def test_an_entry_from_before_1_0_is_not_migrated(hass):
 async def test_unloading_clears_the_hint_issues(hass):
     """Ein deaktivierter Eintrag hinterlaesst keine veralteten Hinweise."""
     entry = await _setup(hass)
-    hass.bus.async_fire(STATUS_EVENT, status_event("wohnung1", "regelt", geraet_hinweise=[
-        {"key": "wunsch_begrenzt", "stufe": "warnung", "text": "Auf 25 °C begrenzt"}]))
+    hass.bus.async_fire(STATUS_EVENT, status_event("wohnung1", "regelt", meldungen=[
+        {"key": "wunsch_begrenzt", "code": "meldung.wunsch_begrenzt", "params": {}, "stufe": "orange"}]))
     await hass.async_block_till_done()
     assert ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_wunsch_begrenzt") is not None
 

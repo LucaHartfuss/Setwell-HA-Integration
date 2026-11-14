@@ -21,9 +21,12 @@ from .const import (
     CODE_RE,
     DATENFEHLER_ARTEN,
     DOMAIN,
-    HINWEIS_FELD_KEY,
-    HINWEIS_FELD_STUFE,
     INTEGRATION_EVENT_SCHEMA,
+    MELDUNG_CODE_RE,
+    MELDUNG_FELD_CODE,
+    MELDUNG_FELD_KEY,
+    MELDUNG_FELD_STUFE,
+    MELDUNG_KEY_RE,
     MINDEST_INTEGRATION_RE,
     V5_SCHEMAS,
 )
@@ -45,6 +48,20 @@ _HINWEIS_KREIS_ID_RE = re.compile(r"hinweis_k(\d{1,3})_h[0-9a-f]+")
 
 def _code(wert: object) -> str | None:
     return wert if isinstance(wert, str) and CODE_RE.fullmatch(wert) else None
+
+
+def _meldungscode(wert: object) -> str | None:
+    """Ein Code einer Meldung (`meldung.…`, `status.grund_…`): Namen mit Punkten, nie freier Text."""
+    return wert if isinstance(wert, str) and MELDUNG_CODE_RE.fullmatch(wert) else None
+
+
+def _meldungskey(wert: object) -> str | None:
+    return wert if isinstance(wert, str) and MELDUNG_KEY_RE.fullmatch(wert) else None
+
+
+def _grund(wert: object) -> str | None:
+    """Der Grund kommt als Objekt aus Code und Parametern; heraus kommt nur der Code (die Parameter bleiben draussen)."""
+    return _meldungscode(wert.get("code")) if isinstance(wert, dict) else None
 
 
 def _datenfehler(wert: object) -> str | None:
@@ -96,12 +113,13 @@ def _hinweise(wert: object) -> dict[str, int | bool | None]:
             "manueller_eingriff": bool(hinweise.get("manueller_eingriff"))}
 
 
-def _geraet_hinweise(wert: object) -> list[dict[str, str | None]]:
-    """Schluessel und Stufe der Hinweise des Geraets, ohne deren Text."""
+def _status_meldungen(wert: object) -> list[dict[str, str | None]]:
+    """Schluessel, Code und Stufe der Meldungen des Geraets, ohne deren Parameter."""
     if not isinstance(wert, list):
         return []
-    return [{"key": _code(hinweis.get(HINWEIS_FELD_KEY)), "stufe": _code(hinweis.get(HINWEIS_FELD_STUFE))}
-            for hinweis in wert[:_MAX_HINWEISE] if isinstance(hinweis, dict)]
+    return [{"key": _meldungskey(meldung.get(MELDUNG_FELD_KEY)),
+             "code": _meldungscode(meldung.get(MELDUNG_FELD_CODE)), "stufe": _code(meldung.get(MELDUNG_FELD_STUFE))}
+            for meldung in wert[:_MAX_HINWEISE] if isinstance(meldung, dict)]
 
 
 def _meldungen(hass: HomeAssistant) -> dict[str, Any]:
@@ -137,14 +155,14 @@ def _status(coordinator) -> dict[str, Any] | None:
     return {
         "schema": _zahl(daten.get("schema")),
         "status": _code(daten.get("status")),
-        "grund": _code(daten.get("grund")),
+        "grund": _grund(daten.get("grund")),
         "geraet_zustand": _code(daten.get("geraet_zustand")),
         "server_verbunden": _wahrheit(daten.get("server_verbunden")),
         "notbetrieb": _wahrheit(daten.get("notbetrieb")),
         "datenfehler": _datenfehler(daten.get("datenfehler")),
         "letzte_serverantwort": _zeitpunkt(daten.get("letzte_serverantwort")),
         "hinweise": _hinweise(daten.get("hinweise")),
-        "geraet_hinweise": _geraet_hinweise(daten.get("geraet_hinweise")),
+        "meldungen": _status_meldungen(daten.get("meldungen")),
         "kreise": [_kreis(nummer, kreis) for nummer, kreis in sorted(coordinator.kreise.items())],
     }
 

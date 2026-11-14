@@ -19,8 +19,8 @@ STATUS_EVENT = "smartheat_status"
 STATUS_EVENT_SCHEMA = 4
 STATUS_EVENT_FIELDS = (
     "schema", "tenant_id", "addon_version", "status", "grund", "notbetrieb", "datenfehler", "letzte_serverantwort",
-    "hinweise", "geraet_id", "geraet_zustand", "server_verbunden", "geraet_hinweise", "anlage_name",
-    "konfig_version", "mindest_integration", "benachrichtigung", "hinweise_aus", "kreise",
+    "hinweise", "geraet_id", "geraet_zustand", "server_verbunden", "meldungen", "anlage_name",
+    "konfig_version", "mindest_integration", "benachrichtigung", "hinweise_aus", "push_regeln", "kreise",
 )
 STATUS_KREIS_FIELDS = (
     "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "boost",
@@ -35,9 +35,15 @@ INTEGRATION_EVENT_FIELDS = ("schema", "version", "v5_schemas")
 V5_SCHEMAS = (STATUS_EVENT_SCHEMA,)
 # Nummer des ersten Kreises: Vorgabe fuer Werkzeuge, die genau einen Kreis ansprechen.
 ERSTER_KREIS = 1
-# Felder eines Geraete-Hinweises (geraet_hinweise); repairs.py und number.py lesen sie ueber diese Namen.
-HINWEIS_FIELDS = ("key", "stufe", "text")
-HINWEIS_FELD_KEY, HINWEIS_FELD_STUFE, HINWEIS_FELD_TEXT = HINWEIS_FIELDS
+# Felder einer Meldung des Geraets (`meldungen`; `kreis` nur bei einer Kreismeldung, nie ein Text); repairs.py, number.py
+# und diagnostics.py lesen sie ueber diese Namen. Stufen von der schwersten zur leichtesten.
+MELDUNG_FIELDS = ("key", "code", "params", "kreis", "stufe")
+MELDUNG_FELD_KEY, MELDUNG_FELD_CODE, _, _, MELDUNG_FELD_STUFE = MELDUNG_FIELDS
+MELDUNG_STUFEN = ("rot", "orange", "gelb")
+# Ein Key der Meldung: schlicht (`[a-z0-9_]`) oder `<kategorie>:<Pruefsumme>`; ein Code des Katalogs: ein bis drei Teile
+# `[a-z0-9_]` mit Punkt (`meldung.…`, `erzeuger.…`, `status.…`). Was nicht passt, gilt als freier Text.
+MELDUNG_KEY_RE = re.compile(r"[a-z0-9_]{1,40}|[a-z0-9_]{1,29}:[0-9a-f]{10}")
+MELDUNG_CODE_RE = re.compile(r"[a-z0-9_]{1,40}(?:\.[a-z0-9_]{1,40}){0,2}")
 HINWEIS_SOLL_QUELLE_AUS = "soll_quelle_aus"
 HINWEIS_KEYS = ("update_noetig", "geraet_doppelt", "wunsch_begrenzt", HINWEIS_SOLL_QUELLE_AUS,
                 "konfiguration_abgelehnt", "gesperrt")

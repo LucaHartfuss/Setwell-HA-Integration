@@ -30,6 +30,7 @@ from .const import (
     INTEGRATION_EVENT_FIELDS,
     INTEGRATION_EVENT_SCHEMA,
     MAX_RESTARTS_PER_WINDOW,
+    MELDUNG_CODE_RE,
     MINDEST_INTEGRATION_RE,
     MISSING_AFTER_CHECKS,
     PUSH_ABGLEICH_SECONDS,
@@ -283,12 +284,15 @@ class SmartHeatCoordinator:
 
     @property
     def reason(self) -> str | None:
-        """Der Grund des Status-Sensors: bei einem Waechter- oder Versionsbefund dessen Code, sonst der Grund des Add-ons."""
+        """Der Grund des Status-Sensors: bei einem Waechter- oder Versionsbefund dessen Code, sonst der Code des Grundes
+        des Add-ons (ein Objekt aus Code und Parametern; die Parameter zeigt der Sensor nicht)."""
         if self.watchdog_status is not None:
             return self.watchdog_status
         if self.version_status is not None:
             return self.version_status
-        return None if self.data is None else self.data.get("grund")
+        grund = None if self.data is None else self.data.get("grund")
+        code = grund.get("code") if isinstance(grund, dict) else None
+        return code if isinstance(code, str) and MELDUNG_CODE_RE.fullmatch(code) else None
 
     @callback
     def async_start(self, version: str) -> None:
@@ -362,13 +366,12 @@ class SmartHeatCoordinator:
         # Nur die Felder des Vertrags (STATUS_EVENT_FIELDS, STATUS_KREIS_FIELDS); fehlende bleiben fehlend.
         self.data = {key: data[key] for key in STATUS_EVENT_FIELDS if key in data and key != "kreise"}
         self.kreise = kreise
-        # Push-Ziele und -Regeln stehen (noch) nicht in STATUS_EVENT_FIELDS: sie kommen unveraendert aus dem Ereignis und
-        # werden in push.py auf Form und Muster geprueft.
+        # Push-Ziele und -Regeln werden in push.py auf Form und Muster geprueft.
         if self.push.ziele_setzen(data.get("benachrichtigung"), data.get("hinweise_aus"), data.get("push_regeln")):
             self.entry.async_create_task(self.hass, self.push.async_verarbeiten(), f"smartheat_push_{self.tenant_id}")
         self._async_geraete_nachziehen(data.get("konfig_version"))
-        hinweise = data.get("geraet_hinweise")
-        repairs.async_update(self.hass, hinweise if isinstance(hinweise, list) else [])
+        meldungen = data.get("meldungen")
+        repairs.async_update(self.hass, meldungen if isinstance(meldungen, list) else [])
         # Gelesenes Schema: ein Befund entsteht nur, wenn die Mindestversion lesbar ist und ueber der eigenen Version
         # liegt. Das Signal geht in jedem Fall raus.
         mindest = data.get("mindest_integration")

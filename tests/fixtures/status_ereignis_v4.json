@@ -3,7 +3,6 @@
   "anlage_name": "Zuhause",
   "benachrichtigung": [],
   "datenfehler": null,
-  "geraet_hinweise": [],
   "geraet_id": "shg-a",
   "geraet_zustand": "regelt",
   "grund": null,
@@ -61,8 +60,14 @@
     }
   ],
   "letzte_serverantwort": null,
+  "meldungen": [],
   "mindest_integration": "1.0.0",
   "notbetrieb": false,
+  "push_regeln": {
+    "ruhe_bis": 7,
+    "ruhe_von": 22,
+    "tageslimit": 5
+  },
   "schema": 4,
   "server_verbunden": true,
   "status": "regelt",

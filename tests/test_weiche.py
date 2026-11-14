@@ -398,9 +398,9 @@ async def test_ein_fehlender_status_verwirft_das_ereignis_nicht(hass, clock):
 
 async def test_ein_unbekannter_hinweisschluessel_ergibt_den_rueckfall_und_das_ereignis_gilt(hass, clock):
     await _setup(hass)
-    hinweis = {"key": "neuer_hinweis", "stufe": "info", "text": "Etwas Neues"}
+    hinweis = {"key": "neuer_hinweis", "code": "meldung.neuer_hinweis", "params": {}, "stufe": "gelb"}
 
-    await _fire(hass, _ereignis(raum_soll=21.5, geraet_hinweise=[hinweis]))
+    await _fire(hass, _ereignis(raum_soll=21.5, meldungen=[hinweis]))
 
     assert float(hass.states.get(WUNSCH).state) == 21.5
     assert _issues(hass)[hinweis_issue_id("neuer_hinweis")].translation_key == "geraet_hinweis"

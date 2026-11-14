@@ -1,5 +1,6 @@
-"""Hinweise des Geraets werden HA-Reparatur-Hinweise; verschwindet ein Hinweis, verschwindet das
-Issue. Je Schluessel ein nicht behebbares Issue, bekannte Schluessel mit eigenem Text."""
+"""Meldungen des Geraets (Code, Parameter, Stufe, kein Text) werden HA-Reparatur-Hinweise; verschwindet eine Meldung,
+verschwindet das Issue. Je Schluessel ein nicht behebbares Issue, bekannte Schluessel mit eigener Ueberschrift; rot ist
+ein Fehler, orange und gelb eine Warnung."""
 import json
 import re
 from pathlib import Path
@@ -19,13 +20,19 @@ from custom_components.smartheat.const import (
     STATUS_EVENT,
     hinweis_issue_id,
 )
+from custom_components.smartheat.texts import klartext
 
-DATA = {"geraet_id": "shg-a", "tenant_id": "zuhause2", "profile_id": "vaillant_gastherme_heizkoerper",
+DATA ={"geraet_id": "shg-a", "tenant_id": "zuhause2", "profile_id": "vaillant_gastherme_heizkoerper",
         "lever_set": "vaillant_vrc720", "hebel": ["curve", "room_setpoint", "heat_limit", "min_flow"],
         "shift_lever": "room_setpoint"}
 EVENT = {"schema": 4, "geraet_id": "shg-a", "tenant_id": "zuhause2", "status": "regelt", "kreise": [{"kreis": 1}],
-         "geraet_hinweise": []}
+         "meldungen": []}
 _COMPONENT = Path(__file__).parents[1] / "custom_components" / "smartheat"
+
+
+def _meldung(key: str, stufe: str = "gelb", code: str = "meldung.test", **extra) -> dict:
+    """Eine Meldung wie im Status-Ereignis: Key, Code, Parameter, Stufe; kein Text."""
+    return {"key": key, "code": code, "params": {}, "stufe": stufe, **extra}
 
 
 async def _setup(hass):
@@ -43,16 +50,17 @@ def _own_issues(hass) -> dict:
 
 async def test_device_hints_become_repairs_and_disappear(hass):
     await _setup(hass)
-    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "geraet_hinweise": [
-        {"key": "update_noetig", "stufe": "kritisch", "text": "Bitte aktualisieren"},
-        {"key": "neu_vom_server", "stufe": "warnung", "text": "Freier Text"}]})
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": [
+        _meldung("update_noetig", "rot", "meldung.update_noetig"),
+        _meldung("neu_vom_server", "orange", "meldung.neu_vom_server")]})
     await hass.async_block_till_done()
     registry = ir.async_get(hass)
     issue = registry.async_get_issue(DOMAIN, "hinweis_update_noetig")
     assert issue is not None and issue.severity == ir.IssueSeverity.ERROR and issue.translation_key == "update_noetig"
     assert issue.is_fixable is False
     other = registry.async_get_issue(DOMAIN, hinweis_issue_id("neu_vom_server"))
-    assert other.translation_key == "geraet_hinweis" and other.translation_placeholders == {"text": "Freier Text"}
+    assert other.translation_key == "geraet_hinweis"
+    assert other.translation_placeholders == {"text": klartext("meldung.neu_vom_server")}
     assert other.severity == ir.IssueSeverity.WARNING
     hass.bus.async_fire(STATUS_EVENT, EVENT)
     await hass.async_block_till_done()
@@ -62,19 +70,17 @@ async def test_device_hints_become_repairs_and_disappear(hass):
 
 async def test_only_the_vanished_hint_is_deleted(hass):
     await _setup(hass)
-    both = [{"key": "geraet_doppelt", "stufe": "kritisch", "text": "Zweite Instanz"},
-            {"key": "wunsch_begrenzt", "stufe": "warnung", "text": "Auf 25 °C begrenzt"}]
-    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "geraet_hinweise": both})
+    both = [_meldung("geraet_doppelt", "rot"), _meldung("wunsch_begrenzt", "orange")]
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": both})
     await hass.async_block_till_done()
-    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "geraet_hinweise": both[:1]})
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": both[:1]})
     await hass.async_block_till_done()
     assert set(_own_issues(hass)) == {"hinweis_geraet_doppelt"}
 
 
 async def test_hints_of_a_foreign_device_create_no_issue(hass):
     await _setup(hass)
-    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "geraet_id": "shg-b", "geraet_hinweise": [
-        {"key": "gesperrt", "stufe": "kritisch", "text": "x"}]})
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "geraet_id": "shg-b", "meldungen": [_meldung("gesperrt", "rot")]})
     await hass.async_block_till_done()
     assert _own_issues(hass) == {}
 
@@ -84,7 +90,7 @@ async def test_issues_of_other_integrations_and_own_non_hint_issues_stay(hass):
                           translation_key="x")
     ir.async_create_issue(hass, DOMAIN, "etwas_anderes", is_fixable=False, severity=ir.IssueSeverity.WARNING,
                           translation_key="x")
-    repairs.async_update(hass, [{"key": "gesperrt", "stufe": "kritisch", "text": "x"}])
+    repairs.async_update(hass, [_meldung("gesperrt", "rot")])
     repairs.async_clear(hass)
     registry = ir.async_get(hass)
     assert registry.async_get_issue("andere", "hinweis_gesperrt") is not None
@@ -94,48 +100,72 @@ async def test_issues_of_other_integrations_and_own_non_hint_issues_stay(hass):
 
 async def test_event_with_broken_hint_list_still_updates_the_status(hass):
     entry = await _setup(hass)
-    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "geraet_hinweise": "kaputt"})
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": "kaputt"})
     await hass.async_block_till_done()
     assert entry.runtime_data.data["status"] == "regelt"
     assert _own_issues(hass) == {}
 
 
-@pytest.mark.parametrize("hinweise", [
-    [{"stufe": "kritisch", "text": "ohne Schluessel"}], [{"key": "", "text": "leer"}], [{"key": 3, "text": "Zahl"}],
+@pytest.mark.parametrize("meldungen", [
+    [{"stufe": "rot", "code": "meldung.x"}], [{"key": "", "code": "meldung.x"}], [{"key": 3, "code": "meldung.x"}],
     ["kein Objekt"], [None],
 ])
-def test_broken_hints_create_no_issue_and_do_not_raise(hass, hinweise):
-    repairs.async_update(hass, hinweise)
+def test_broken_meldungen_create_no_issue_and_do_not_raise(hass, meldungen):
+    repairs.async_update(hass, meldungen)
     assert _own_issues(hass) == {}
 
 
-@pytest.mark.parametrize("key", ["Frau Mustermann ist verreist", "Update-Noetig", "a" * 41, "ä", "x/y", "a b"])
-def test_a_key_that_is_not_a_code_creates_no_issue(hass, key):
+@pytest.mark.parametrize("key", ["Frau Mustermann ist verreist", "Update-Noetig", "a" * 41, "ä", "x/y", "a b",
+                                 "wohnzimmer:XYZ", "k1_x:0123456789ab", ":0123456789"])
+def test_a_key_that_is_not_a_key_creates_no_issue(hass, key):
     """Die Issue-ID steht im Diagnose-Download: ein Schluessel mit freiem Text darf dort nie erscheinen."""
-    repairs.async_update(hass, [{"key": key, "stufe": "kritisch", "text": "x"}, {"key": "wunsch_begrenzt"}])
+    repairs.async_update(hass, [_meldung(key, "rot"), _meldung("wunsch_begrenzt")])
     assert set(_own_issues(hass)) == {"hinweis_wunsch_begrenzt"}
 
 
-def test_hint_without_text_or_stufe_is_a_warning_with_empty_text(hass):
+@pytest.mark.parametrize("key", ["erzeuger:0123456789", "meldung:abcdef0123", "a" * 29 + ":0123456789"])
+def test_a_key_with_category_and_checksum_creates_an_issue_without_the_colon(hass, key):
+    repairs.async_update(hass, [_meldung(key, "orange")])
+    (issue_id,) = _own_issues(hass)
+    assert issue_id == hinweis_issue_id(key) and ":" not in issue_id and re.fullmatch(r"hinweis_h[0-9a-f]{10}", issue_id)
+
+
+def test_meldung_without_code_is_a_warning_with_empty_text(hass):
     repairs.async_update(hass, [{"key": "soll_quelle_aus"}])
     issue = ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_soll_quelle_aus")
     assert (issue.severity, issue.translation_key, issue.translation_placeholders) == (
         ir.IssueSeverity.WARNING, "soll_quelle_aus", {"text": ""})
 
 
+@pytest.mark.parametrize("code", ["Freier Text mit Leerzeichen", "a" * 41, "meldung..x", "a.b.c.d", 3, None])
+def test_a_code_that_is_not_a_code_gives_no_text(hass, code):
+    """Was kein Code ist (freier Text), kommt nie in die Beschreibung."""
+    repairs.async_update(hass, [{"key": "gesperrt", "code": code, "params": {}, "stufe": "rot"}])
+    assert ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_gesperrt").translation_placeholders == {"text": ""}
+
+
+@pytest.mark.parametrize("stufe, severity", [
+    ("rot", ir.IssueSeverity.ERROR), ("orange", ir.IssueSeverity.WARNING), ("gelb", ir.IssueSeverity.WARNING),
+    ("kritisch", ir.IssueSeverity.WARNING), (None, ir.IssueSeverity.WARNING),
+])
+def test_only_red_is_an_error(hass, stufe, severity):
+    repairs.async_update(hass, [{"key": "gesperrt", "code": "meldung.x", "params": {}, "stufe": stufe}])
+    assert ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_gesperrt").severity == severity
+
+
 def _device_issues(hass) -> dict:
     return {i: issue for i, issue in _own_issues(hass).items() if i.startswith("hinweis_")}
 
 
-def _flut(anzahl: int, stufe: str = "warnung", prefix: str = "flut") -> list[dict]:
-    return [{"key": f"{prefix}_{n:03d}", "stufe": stufe, "text": "x"} for n in range(anzahl)]
+def _flut(anzahl: int, stufe: str = "gelb", prefix: str = "flut") -> list[dict]:
+    return [_meldung(f"{prefix}_{n:03d}", stufe) for n in range(anzahl)]
 
 
 async def test_a_flood_of_device_hints_is_capped_with_one_summary_issue(hass):
-    """Ein fremdes Ereignis kann beliebig viele Hinweise melden; die Integration legt hoechstens 50 Issues an und
+    """Ein fremdes Ereignis kann beliebig viele Meldungen melden; die Integration legt hoechstens 50 Issues an und
     ein Sammel-Issue mit der Zahl der uebrigen."""
     await _setup(hass)
-    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "geraet_hinweise": _flut(120)})
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": _flut(120)})
     await hass.async_block_till_done()
     issues = _device_issues(hass)
     sammel = issues.pop("hinweis_sammel")
@@ -154,13 +184,22 @@ def test_exactly_fifty_hints_need_no_summary_issue(hass):
         "anzahl": "1"}
 
 
-def test_critical_hints_survive_the_cap(hass):
-    """Kommen die kritischen Hinweise erst nach den ersten 50, fallen sie nicht weg."""
-    kritisch = _flut(5, "kritisch", "rot")
-    repairs.async_update(hass, [*_flut(80), *kritisch])
+def test_red_meldungen_survive_the_cap(hass):
+    """Kommen die roten Meldungen erst nach den ersten 50, fallen sie nicht weg."""
+    rot = _flut(5, "rot", "rot")
+    repairs.async_update(hass, [*_flut(80), *rot])
     issues = _device_issues(hass)
-    assert {hinweis_issue_id(h["key"]) for h in kritisch} <= set(issues)
+    assert {hinweis_issue_id(h["key"]) for h in rot} <= set(issues)
     assert issues["hinweis_sammel"].translation_placeholders == {"anzahl": "35"}
+
+
+def test_the_cap_keeps_the_order_red_then_orange_then_yellow(hass):
+    gelb, orange, rot = _flut(30, "gelb", "gelb"), _flut(30, "orange", "orange"), _flut(10, "rot", "rot")
+    repairs.async_update(hass, [*gelb, *orange, *rot])
+    issues = _device_issues(hass)
+    assert {hinweis_issue_id(h["key"]) for h in (*rot, *orange, *gelb[:10])} <= set(issues)
+    assert not {hinweis_issue_id(h["key"]) for h in gelb[10:]} & set(issues)
+    assert len(issues) == 51 and issues["hinweis_sammel"].translation_placeholders == {"anzahl": "20"}
 
 
 def test_the_summary_issue_follows_the_flood_and_goes_with_it(hass):
@@ -206,7 +245,7 @@ def test_issue_ids_are_stable_and_distinct_and_known_keys_stay_readable():
 
 
 def test_a_hint_with_a_sensor_name_never_reaches_the_registry_ids(hass):
-    repairs.async_update(hass, [{"key": "k2_raumfuehler_wohnzimmer_sensor", "stufe": "kritisch", "text": "x"}])
+    repairs.async_update(hass, [_meldung("k2_raumfuehler_wohnzimmer_sensor", "rot")])
     (issue_id,) = _device_issues(hass)
     assert "wohnzimmer" not in issue_id and "raumfuehler" not in issue_id and issue_id.startswith("hinweis_k2_h")
 
@@ -220,14 +259,19 @@ def test_the_summary_issue_has_a_text_with_the_count(path):
 _MARKDOWN_ZEICHEN = "\\`*_[]()<>#!|~&:.@"
 
 
-def test_servertext_erscheint_als_klartext(hass):
-    """HA stellt die Beschreibung eines Hinweises als Markdown dar; der Text kommt vom Geraet (und damit
-    mittelbar vom Server) und darf weder einen Link noch Formatierung einschleusen: jedes Markdown-Zeichen wird mit
-    `\\` maskiert, der Nutzer liest den Text unveraendert."""
-    text = "[Link](https://x) **fett** `code` <b>x</b> a_b # h ! i | t ~ s \\ ende"
-    repairs.async_update(hass, [{"key": "gesperrt", "stufe": "kritisch", "text": text}])
-
+def test_der_code_erscheint_als_klartext(hass):
+    """Der Code einer Meldung ist der einzige Text in der Beschreibung (bis die Texte je Code in den Uebersetzungen
+    stehen); HA stellt sie als Markdown dar, daher steht er maskiert."""
+    repairs.async_update(hass, [_meldung("gesperrt", "rot", "meldung.update_noetig")])
     angezeigt = ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_gesperrt").translation_placeholders["text"]
+    assert angezeigt == "meldung\\.update\\_noetig"
+
+
+def test_klartext_maskiert_jedes_markdown_zeichen():
+    """HA stellt eine Beschreibung als Markdown dar; ein Text, der nicht von uns stammt, darf weder einen Link noch
+    Formatierung einschleusen: jedes Markdown-Zeichen wird mit `\\` maskiert, der Nutzer liest den Text unveraendert."""
+    text = "[Link](https://x) **fett** `code` <b>x</b> a_b # h ! i | t ~ s \\ ende"
+    angezeigt = klartext(text)
 
     assert angezeigt.startswith("\\[Link\\]\\(https\\://x\\) \\*\\*fett\\*\\* ")
     ungeschuetzt = re.sub(r"\\.", "", angezeigt)  # jedes maskierte Zeichen entfernen
@@ -236,15 +280,12 @@ def test_servertext_erscheint_als_klartext(hass):
 
 
 @pytest.mark.parametrize("zeichen", list(_MARKDOWN_ZEICHEN))
-def test_every_markdown_character_is_masked(hass, zeichen):
-    repairs.async_update(hass, [{"key": "gesperrt", "text": f"a{zeichen}b"}])
-    angezeigt = ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_gesperrt").translation_placeholders["text"]
-    assert angezeigt == f"a\\{zeichen}b"
+def test_every_markdown_character_is_masked(zeichen):
+    assert klartext(f"a{zeichen}b") == f"a\\{zeichen}b"
 
 
-def _angezeigt(hass, text) -> str:
-    repairs.async_update(hass, [{"key": "gesperrt", "text": text}])
-    return ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_gesperrt").translation_placeholders["text"]
+def _angezeigt(text) -> str:
+    return klartext(text)
 
 
 # Was HAs Markdown (GFM) ohne Zutun eines Links selbst verlinkt: URL mit Schema, `www.`-Adresse, E-Mail-Adresse.
@@ -255,30 +296,29 @@ _AUTOLINK = re.compile(r"(?<!\\)(?:[a-z][a-z0-9+.-]*://|www\.|[\w.+-]+@[\w-]+\.)
     "Bitte https://evil.example/x oeffnen", "Bitte http://evil.example oeffnen", "www.evil.example",
     "Mail an angreifer@evil.example", "ftp://evil.example/x",
 ])
-def test_servertext_enthaelt_keine_automatisch_verlinkte_adresse(hass, text):
+def test_klartext_enthaelt_keine_automatisch_verlinkte_adresse(text):
     """Auch ohne Link-Syntax verlinkt Markdown nackte Adressen; `:`, `.` und `@` sind
-    maskiert, damit keine anklickbare Adresse entsteht (ein manipulierter Server koennte sonst einen Phishing-Link in
-    einen Hinweis legen)."""
-    assert text != _angezeigt(hass, text)
+    maskiert, damit keine anklickbare Adresse entsteht."""
+    assert text != _angezeigt(text)
     assert _AUTOLINK.search(text)  # Gegenprobe: der Roh-Text waere verlinkt worden
-    assert not _AUTOLINK.search(_angezeigt(hass, text))
+    assert not _AUTOLINK.search(_angezeigt(text))
 
 
-def test_servertext_zeilenumbrueche_und_steuerzeichen_werden_zu_leerzeichen(hass):
+def test_klartext_zeilenumbrueche_und_steuerzeichen_werden_zu_leerzeichen():
     """Ein Zeilenumbruch koennte einen eigenen Markdown-Block (Liste, Ueberschrift, Code) beginnen."""
-    assert _angezeigt(hass, "a\r\nb\nc\rd\te\x00f\x7fg\u2028h\u2029i") == "a  b c d e f g h i"
+    assert _angezeigt("a\r\nb\nc\rd\te\x00f\x7fg\u2028h\u2029i") == "a  b c d e f g h i"
 
 
-def test_servertext_und_zeichen_bleibt_woertlich(hass):
+def test_klartext_und_zeichen_bleibt_woertlich():
     """`&amp;` darf nicht als HTML-Entity gelesen werden: das `&` ist maskiert."""
-    assert _angezeigt(hass, "Tom &amp; Jerry &#60;") == "Tom \\&amp; Jerry \\&\\#60;"
-    assert re.sub(r"\\(.)", r"\1", _angezeigt(hass, "Tom &amp; Jerry")) == "Tom &amp; Jerry"
+    assert _angezeigt("Tom &amp; Jerry &#60;") == "Tom \\&amp; Jerry \\&\\#60;"
+    assert re.sub(r"\\(.)", r"\1", _angezeigt("Tom &amp; Jerry")) == "Tom &amp; Jerry"
 
 
-def test_gewoehnlicher_deutscher_text_bleibt_lesbar(hass):
+def test_gewoehnlicher_deutscher_text_bleibt_lesbar():
     """Gegenprobe: Umlaute, ein Komma-Dezimalwert und die Einheit bleiben unveraendert."""
     text = "Thermostat aus, SmartHeat hält 21,5 °C – bitte prüfen"
-    assert _angezeigt(hass, text) == text
+    assert _angezeigt(text) == text
 
 
 @pytest.mark.parametrize("text, erwartet", [
@@ -295,51 +335,41 @@ def test_gewoehnlicher_deutscher_text_bleibt_lesbar(hass):
     ("# Titel", "\\# Titel"),
     ("-5 K", "\\-5 K"),
 ])
-def test_servertext_beginnt_keinen_markdown_block(hass, text, erwartet):
+def test_klartext_beginnt_keinen_markdown_block(text, erwartet):
     """Steht der Text am Anfang der Beschreibung, wuerde fuehrende Block-Syntax
     (Liste, Codeblock, Linie, Ueberschrift, Zitat) eine Darstellung erzeugen. Fuehrender Leerraum faellt weg, ein
     fuehrendes `-`, `+`, `=` wird maskiert (Ziffer mit Punkt und `*`, `>`, `#` maskiert schon die Zeichenliste)."""
-    assert _angezeigt(hass, text) == erwartet
+    assert _angezeigt(text) == erwartet
 
 
-def test_ein_bindestrich_mitten_im_text_bleibt_unveraendert(hass):
+def test_ein_bindestrich_mitten_im_text_bleibt_unveraendert():
     """Gegenprobe: nur am Anfang wird maskiert (`SmartHeat-Dienst` bleibt lesbar)."""
-    assert _angezeigt(hass, "Der SmartHeat-Dienst - 5 K") == "Der SmartHeat-Dienst - 5 K"
+    assert _angezeigt("Der SmartHeat-Dienst - 5 K") == "Der SmartHeat-Dienst - 5 K"
 
 
-def test_servertext_ohne_bidi_und_zero_width_zeichen(hass):
+def test_klartext_ohne_bidi_und_zero_width_zeichen():
     """Zero-width- und Bidi-Steuerzeichen (U+200B-200F, U+202A-202E,
     U+2066-2069, U+FEFF) koennten den Text optisch umdrehen oder Zeichen verstecken: sie fallen weg."""
     zeichen = [chr(c) for c in (*range(0x200B, 0x2010), *range(0x202A, 0x202F), *range(0x2066, 0x206A), 0xFEFF)]
-    assert _angezeigt(hass, "a" + "".join(zeichen) + "b\u202Ec\u200Bd") == "abcd"
-    assert _angezeigt(hass, "ä ö ü ß – 21,5 °C") == "ä ö ü ß – 21,5 °C"  # Gegenprobe: Umlaute usw. bleiben
+    assert _angezeigt("a" + "".join(zeichen) + "b\u202Ec\u200Bd") == "abcd"
+    assert _angezeigt("ä ö ü ß – 21,5 °C") == "ä ö ü ß – 21,5 °C"  # Gegenprobe: Umlaute usw. bleiben
 
 
-def test_servertext_wird_gekuerzt(hass):
-    """Der Text eines Hinweises hat hoechstens ERROR_TEXT_MAX Zeichen (vor der Maskierung); danach stehen
-    keine halben Maskierungen am Ende."""
-    repairs.async_update(hass, [{"key": "gesperrt", "text": "x" * 1000},
-                                {"key": "wunsch_begrenzt", "text": "*" * 1000}])
-    issues = _own_issues(hass)
-
-    assert issues["hinweis_gesperrt"].translation_placeholders["text"] == "x" * ERROR_TEXT_MAX
-    assert issues["hinweis_wunsch_begrenzt"].translation_placeholders["text"] == "\\*" * ERROR_TEXT_MAX
+def test_klartext_wird_gekuerzt():
+    """Der Text hat hoechstens ERROR_TEXT_MAX Zeichen (vor der Maskierung); danach stehen keine halben Maskierungen am
+    Ende."""
+    assert klartext("x" * 1000) == "x" * ERROR_TEXT_MAX
+    assert klartext("*" * 1000) == "\\*" * ERROR_TEXT_MAX
 
 
-# Texte des Geraets wie heizungsbruecke/geraet_status.py und smartheat_device.device.ABLEHNUNG_ANZEIGE (Deutsch).
-_UPDATE_TEXT = "Das Add-on ist zu alt für den SmartHeat-Dienst. Bitte das Add-on aktualisieren."
-_ABGELEHNT_TEXT = "Die Einrichtung wurde abgelehnt (Code rolle_fehlt). Die Begründung zeigt der Einrichtungsassistent."
-
-
-async def test_hint_issues_keep_todays_ids_and_texts(hass):
-    """Heutiges Verhalten festgehalten (offene-punkte.md 5c-I-14): die Issue-ID ist nur `hinweis_<schluessel>` (nicht je
-    Eintrag, passt zu `single_config_entry`); die Beschreibung von `update_noetig` wiederholt nach dem Geraetetext dessen Anweisung; die
-    deutschen Geraetetexte stehen auch in den englischen Beschreibungen. Die Geraetetexte stehen mit
-    maskierten Zeichen darin (`(`, `)`, `_`, `.`); HA stellt sie als Klartext dar."""
+async def test_hint_issues_keep_todays_ids_and_show_the_code(hass):
+    """Die Issue-ID ist nur `hinweis_<schluessel>` (nicht je Eintrag, passt zu `single_config_entry`); die Beschreibung
+    nennt vorerst den Code der Meldung (maskiert: `.` und `_`), bis die Texte je Code in den Uebersetzungen stehen; die
+    Anweisung von `update_noetig` und `konfiguration_abgelehnt` steht in der Beschreibung."""
     entry = await _setup(hass)
-    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "geraet_hinweise": [
-        {"key": "update_noetig", "stufe": "kritisch", "text": _UPDATE_TEXT},
-        {"key": "konfiguration_abgelehnt", "stufe": "kritisch", "text": _ABGELEHNT_TEXT}]})
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": [
+        _meldung("update_noetig", "rot", "meldung.update_noetig"),
+        _meldung("konfiguration_abgelehnt", "rot", "meldung.konfiguration_abgelehnt")]})
     await hass.async_block_till_done()
     issues = _own_issues(hass)
     assert set(issues) == {"hinweis_update_noetig", "hinweis_konfiguration_abgelehnt"}
@@ -353,14 +383,12 @@ async def test_hint_issues_keep_todays_ids_and_texts(hass):
     en = await async_get_translations(hass, "en", "issues", [DOMAIN])
     de = await async_get_translations(hass, "de", "issues", [DOMAIN])
     assert beschreibung(en, "hinweis_update_noetig") == (
-        "Das Add-on ist zu alt für den SmartHeat-Dienst\\. Bitte das Add-on aktualisieren\\. "
-        "Settings → Add-ons → Heizungsbrücke → Update.")
+        "meldung\\.update\\_noetig Settings → Add-ons → Heizungsbrücke → Update.")
     assert beschreibung(de, "hinweis_update_noetig") == (
-        "Das Add-on ist zu alt für den SmartHeat-Dienst\\. Bitte das Add-on aktualisieren\\. "
-        "Einstellungen → Add-ons → Heizungsbrücke → Aktualisieren.")
+        "meldung\\.update\\_noetig Einstellungen → Add-ons → Heizungsbrücke → Aktualisieren.")
     assert beschreibung(en, "hinweis_konfiguration_abgelehnt") == (
-        "The add-on rejected the new setting: Die Einrichtung wurde abgelehnt \\(Code rolle\\_fehlt\\)\\. "
-        "Die Begründung zeigt der Einrichtungsassistent\\. Please check it under SmartHeat → Reconfigure.")
+        "The add-on rejected the new setting: meldung\\.konfiguration\\_abgelehnt Please check it under SmartHeat → "
+        "Reconfigure.")
 
 
 @pytest.mark.parametrize("path", ["strings.json", "translations/en.json", "translations/de.json"])

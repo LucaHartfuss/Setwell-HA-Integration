@@ -5,6 +5,12 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 ## Unveröffentlicht
 
+- Das Status-Ereignis des Add-ons trägt die Meldungen des Geräts jetzt als `meldungen` (Schlüssel, Code, Parameter,
+  Kreis, Stufe rot, orange oder gelb) ohne Text, dazu die Push-Regeln als `push_regeln`; `geraet_hinweise` entfällt. Der
+  Grund des Status kommt als Code mit Parametern. Die Integration liest den Code und zeigt die Meldungen als Reparatur-
+  hinweise (rot als Fehler, sonst als Warnung); ein Add-on mit alter Form liefert keinen Grund und keine Meldungen. Die
+  Diagnose gibt Schlüssel, Code und Stufe der Meldungen aus, nie deren Parameter. Die Texte je Code folgen mit den
+  Übersetzungen; bis dahin steht der Code lesbar im Hinweis.
 - Push-Regeln: das Tageslimit für orange Meldungen liegt jetzt bei 1 bis 5 (bisher 1 bis 50); ein Wert außerhalb fällt
   wie bisher auf den Standard 5 zurück, ohne das Ereignis abzulehnen. Ruhezeit-Standard bleibt 22 bis 7 Uhr.
 - Die Auswahl „Hinweise ohne Push“ bietet die Art „Raumfühler“ nicht mehr an: Meldungen zu Raumfühlern lassen sich

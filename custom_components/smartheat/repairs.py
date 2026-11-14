@@ -1,7 +1,7 @@
-"""Reparatur-Hinweise aus den Hinweisen des Geraets: je Schluessel ein nicht behebbares Issue;
-bekannte Schluessel mit eigenem Text, andere mit dem Text des Geraets. Verschwindet ein Schluessel, verschwindet das
-Issue. Kein Fix-Flow (alle Issues sind nicht behebbar); HA laedt dieses Modul als repairs-Plattform nur fuer
-behebbare Issues."""
+"""Reparatur-Hinweise aus den Meldungen des Geraets: je Schluessel ein nicht behebbares Issue; bekannte Schluessel mit
+eigenem Text, andere mit dem allgemeinen Geraete-Hinweis. Der Text im Issue ist vorerst der Code der Meldung (die
+Uebersetzung je Code folgt); die Parameter bleiben draussen. Verschwindet ein Schluessel, verschwindet das Issue. Kein
+Fix-Flow (alle Issues sind nicht behebbar); HA laedt dieses Modul als repairs-Plattform nur fuer behebbare Issues."""
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
@@ -9,16 +9,18 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import (
     AUTO_UPDATE_ISSUE_ID,
-    CODE_RE,
     DOMAIN,
-    HINWEIS_FELD_KEY,
-    HINWEIS_FELD_STUFE,
-    HINWEIS_FELD_TEXT,
     HINWEIS_KEYS,
     HINWEIS_SAMMEL_ID,
     HINWEIS_SAMMEL_KEY,
     HINWEISE_MAX,
     ISSUE_OHNE_VERSION,
+    MELDUNG_CODE_RE,
+    MELDUNG_FELD_CODE,
+    MELDUNG_FELD_KEY,
+    MELDUNG_FELD_STUFE,
+    MELDUNG_KEY_RE,
+    MELDUNG_STUFEN,
     MINDEST_INTEGRATION_RE,
     STATUS_ADDON_MEHRFACH,
     STATUS_INTEGRATION_VERALTET,
@@ -28,36 +30,48 @@ from .const import (
 )
 from .texts import klartext
 
-KRITISCH = "kritisch"
+_ROT = MELDUNG_STUFEN[0]
 _PREFIX = "hinweis_"
 GERAET_HINWEIS = "geraet_hinweis"
 
 
-def async_update(hass: HomeAssistant, hinweise: list[dict]) -> None:
-    """Issues `hinweis_…` auf den Stand von `hinweise` bringen; Eintraege ohne Schluessel oder mit einem Schluessel,
-    der kein Code ist, ignorieren (die Issue-ID steht im Diagnose-Download und darf keinen freien Text tragen; ihre
-    Bildung: `const.hinweis_issue_id`). Hoechstens HINWEISE_MAX Issues, kritische zuerst; fuer die uebrigen gibt es ein
-    Sammel-Issue mit deren Anzahl."""
+def _rang(meldung: dict) -> int:
+    """Rang der Stufe (rot vor orange vor gelb); eine unbekannte Stufe steht zuletzt."""
+    stufe = meldung.get(MELDUNG_FELD_STUFE)
+    return MELDUNG_STUFEN.index(stufe) if stufe in MELDUNG_STUFEN else len(MELDUNG_STUFEN)
+
+
+def _code_text(meldung: dict) -> str:
+    """Der Code der Meldung als Text fuers Issue; ein Wert, der kein Code ist, ergibt keinen Text."""
+    code = meldung.get(MELDUNG_FELD_CODE)
+    return klartext(code) if isinstance(code, str) and MELDUNG_CODE_RE.fullmatch(code) else ""
+
+
+def async_update(hass: HomeAssistant, meldungen: list[dict]) -> None:
+    """Issues `hinweis_…` auf den Stand von `meldungen` bringen; Eintraege ohne Schluessel oder mit einem Schluessel,
+    der keiner ist, ignorieren (die Issue-ID steht im Diagnose-Download und darf keinen freien Text tragen; ihre
+    Bildung: `const.hinweis_issue_id`). Hoechstens HINWEISE_MAX Issues, rote zuerst, dann orange, dann gelbe; fuer die
+    uebrigen gibt es ein Sammel-Issue mit deren Anzahl. Nur rot ist ein Fehler, sonst eine Warnung."""
     registry = ir.async_get(hass)
     gueltig: dict[str, tuple[str, dict]] = {}
-    for hinweis in hinweise:
-        if not isinstance(hinweis, dict):
+    for meldung in meldungen:
+        if not isinstance(meldung, dict):
             continue
-        key = hinweis.get(HINWEIS_FELD_KEY)
-        if not isinstance(key, str) or CODE_RE.fullmatch(key) is None:
+        key = meldung.get(MELDUNG_FELD_KEY)
+        if not isinstance(key, str) or MELDUNG_KEY_RE.fullmatch(key) is None:
             continue
-        gueltig.setdefault(hinweis_issue_id(key), (key, hinweis))
+        gueltig.setdefault(hinweis_issue_id(key), (key, meldung))
     # sorted ist stabil: innerhalb einer Stufe bleibt die Reihenfolge des Geraets
-    ausgewaehlt = sorted(gueltig.items(), key=lambda eintrag: eintrag[1][1].get(HINWEIS_FELD_STUFE) != KRITISCH)
+    ausgewaehlt = sorted(gueltig.items(), key=lambda eintrag: _rang(eintrag[1][1]))
     aktuell = set()
-    for issue_id, (key, hinweis) in ausgewaehlt[:HINWEISE_MAX]:
+    for issue_id, (key, meldung) in ausgewaehlt[:HINWEISE_MAX]:
         aktuell.add(issue_id)
-        severity = ir.IssueSeverity.ERROR if hinweis.get(HINWEIS_FELD_STUFE) == KRITISCH else ir.IssueSeverity.WARNING
+        severity = ir.IssueSeverity.ERROR if meldung.get(MELDUNG_FELD_STUFE) == _ROT else ir.IssueSeverity.WARNING
         ir.async_create_issue(
             hass, DOMAIN, issue_id, is_fixable=False,
             severity=severity,
             translation_key=key if key in HINWEIS_KEYS else GERAET_HINWEIS,
-            translation_placeholders={"text": klartext(hinweis.get(HINWEIS_FELD_TEXT))},
+            translation_placeholders={"text": _code_text(meldung)},
         )
     ueberzaehlig = len(ausgewaehlt) - HINWEISE_MAX
     if ueberzaehlig > 0:
