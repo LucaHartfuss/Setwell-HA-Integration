@@ -33,6 +33,12 @@ INTEGRATION_EVENT = "smartheat_integration"
 INTEGRATION_EVENT_SCHEMA = 1
 INTEGRATION_EVENT_FIELDS = ("schema", "version", "v5_schemas")
 V5_SCHEMAS = (STATUS_EVENT_SCHEMA,)
+# Rueckmeldung an das Add-on (Vertrag V5), wenn die Integration eine Push-Meldung nach 24 Stunden erfolglosen Versands
+# aufgibt: einmal je aufgegebenem Eintrag, nur Schema, Stufe (`rot` oder `orange`) und Kreis (Nummer oder None). Weder
+# Code noch Text noch Ziele noch Zeit; das Add-on liest das Ereignis streng und traut ihm nur eine orange Meldung zu.
+PUSH_AUFGEGEBEN_EVENT = "smartheat_push_aufgegeben"
+PUSH_AUFGEGEBEN_EVENT_SCHEMA = 1
+PUSH_AUFGEGEBEN_EVENT_FIELDS = ("schema", "stufe", "kreis")
 # Nummer des ersten Kreises: Vorgabe fuer Werkzeuge, die genau einen Kreis ansprechen.
 ERSTER_KREIS = 1
 # Felder einer Meldung des Geraets (`meldungen`; `kreis` nur bei einer Kreismeldung, nie ein Text); repairs.py, number.py

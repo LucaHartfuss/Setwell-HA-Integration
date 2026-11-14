@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 from homeassistant.exceptions import HomeAssistantError
-from pytest_homeassistant_custom_component.common import async_mock_service
+from pytest_homeassistant_custom_component.common import async_capture_events, async_mock_service
 
-from custom_components.smartheat.const import EINRICHTUNG_MAX_HANDYS
+from custom_components.smartheat.const import EINRICHTUNG_MAX_HANDYS, PUSH_AUFGEGEBEN_EVENT
 from custom_components.smartheat.push import Push
 
 DIENST = "notify.mobile_app_pixel"
@@ -591,3 +591,78 @@ async def test_the_log_names_neither_the_service_nor_the_error_text(hass, push, 
     text = "\n".join(r.getMessage() for r in caplog.records if r.name.startswith("custom_components.smartheat"))
     assert "addon_gestoppt" in text and "Kreis 2" in text  # Code und Zahlen duerfen stehen
     assert "pixel" not in text and "kaputt" not in text and "notify" not in text
+
+
+# --- Rueckmeldung eines aufgegebenen Pushs ---
+
+def _aufgegeben(hass):
+    return async_capture_events(hass, PUSH_AUFGEGEBEN_EVENT)
+
+
+async def test_a_push_given_up_after_24_hours_fires_one_event_with_level_and_circuit_only(hass, push, freezer):
+    _ausfall(hass)
+    ereignisse = _aufgegeben(hass)
+    await push.melden("addon_gestoppt", "waechter", 2, "rot", True)
+    _um(freezer, "11:59:00", tag=12)
+    await push.async_verarbeiten()
+    await hass.async_block_till_done()
+    assert ereignisse == []  # eine Minute vor Ablauf der 24 Stunden
+
+    _um(freezer, "12:00:00", tag=12)
+    await push.async_verarbeiten()
+    await push.async_verarbeiten()
+    await hass.async_block_till_done()
+    assert [e.data for e in ereignisse] == [{"schema": 1, "stufe": "rot", "kreis": 2}]
+
+
+async def test_an_orange_push_given_up_reports_its_level_and_a_missing_circuit_stays_none(hass, push, freezer):
+    _ausfall(hass)
+    ereignisse = _aufgegeben(hass)
+    await _orange(push, kreis=None)
+    _um(freezer, "12:00:00", tag=12)
+    await push.async_verarbeiten()
+    await hass.async_block_till_done()
+    assert [e.data for e in ereignisse] == [{"schema": 1, "stufe": "orange", "kreis": None}]
+
+
+async def test_a_given_up_push_is_not_reported_again_after_a_restart(hass, push, hass_storage, freezer):
+    _ausfall(hass)
+    ereignisse = _aufgegeben(hass)
+    await _rot(push)
+    _um(freezer, "12:00:00", tag=12)
+    await push.async_verarbeiten()
+    neu = Push(hass)
+    await neu.async_laden()
+    neu.ziele_setzen([DIENST], [], REGELN)
+    _um(freezer, "12:05:00", tag=12)
+    await neu.async_verarbeiten()
+    await hass.async_block_till_done()
+    assert len(ereignisse) == 1
+
+
+async def test_a_push_that_got_through_fires_no_event(hass, push, dienst, freezer):
+    ereignisse = _aufgegeben(hass)
+    await _rot(push)
+    await _orange(push)
+    _um(freezer, "12:00:00", tag=12)
+    await push.async_verarbeiten()
+    await hass.async_block_till_done()
+    assert len(dienst) == 3 and ereignisse == []  # Rot, Orange und die Erinnerung an Rot
+
+
+async def test_a_reminder_that_becomes_pending_again_fires_no_event(hass, push, dienst, freezer):
+    ereignisse = _aufgegeben(hass)
+    await _rot(push)
+    _um(freezer, "12:00:00", tag=12)
+    await push.async_verarbeiten()  # Erinnerung, erfolgreich gesendet
+    await hass.async_block_till_done()
+    assert len(dienst) == 2 and ereignisse == []
+
+
+async def test_a_push_without_targets_fires_no_event(hass, push, dienst):
+    ereignisse = _aufgegeben(hass)
+    push.ziele_setzen([], [], REGELN)
+    await _rot(push)
+    await _orange(push)
+    await hass.async_block_till_done()
+    assert dienst == [] and ereignisse == []
