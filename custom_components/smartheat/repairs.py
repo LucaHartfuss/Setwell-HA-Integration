@@ -1,6 +1,6 @@
 """Reparatur-Hinweise aus den Meldungen des Geraets: je Schluessel ein nicht behebbares Issue; bekannte Schluessel mit
 eigenem Text, andere mit dem allgemeinen Geraete-Hinweis. Der Text im Issue ist, ausser bei den Codes der Weiche
-(`_issue_text`: Mindestversion mit Datum, Frische der Software mit Grund), vorerst der Code der Meldung (die
+(`_issue_text`: Mindestversion mit Datum, ohne Datum und ohne kritischen Eintrag, Frische der Software mit Grund), vorerst der Code der Meldung (die
 Uebersetzung je Code folgt); sonstige Parameter bleiben draussen. Verschwindet ein Schluessel, verschwindet das Issue. Kein
 Fix-Flow (alle Issues sind nicht behebbar); HA laedt dieses Modul als repairs-Plattform nur fuer behebbare Issues."""
 from __future__ import annotations
@@ -19,6 +19,7 @@ from .const import (
     HINWEISE_MAX,
     ISSUE_OHNE_VERSION,
     ISSUE_UPDATE_NOETIG_ENDE,
+    ISSUE_UPDATE_NOETIG_MINDEST,
     ISSUE_UPDATE_NOETIG_UNBEKANNT,
     ISSUE_UPDATES_VERALTET,
     MELDUNG_CODE_RE,
@@ -32,6 +33,7 @@ from .const import (
     MELDUNG_KEY_RE,
     MELDUNG_STUFEN,
     MELDUNG_UPDATE_NOETIG,
+    MELDUNG_UPDATE_NOETIG_MINDEST,
     MELDUNG_UPDATE_NOETIG_UNBEKANNT,
     MELDUNG_UPDATES_VERALTET,
     MINDEST_INTEGRATION_RE,
@@ -89,6 +91,8 @@ def _issue_text(hass: HomeAssistant, key: str, meldung: dict) -> tuple[str, dict
         return ISSUE_UPDATE_NOETIG_UNBEKANNT, {}
     if code == MELDUNG_UPDATE_NOETIG_UNBEKANNT:
         return ISSUE_UPDATE_NOETIG_UNBEKANNT, {}
+    if code == MELDUNG_UPDATE_NOETIG_MINDEST:
+        return ISSUE_UPDATE_NOETIG_MINDEST, {}
     if code == MELDUNG_UPDATES_VERALTET:
         grund = _parameter(meldung, "grund")
         gueltig = isinstance(grund, str) and MELDUNG_GRUND_RE.fullmatch(grund) is not None

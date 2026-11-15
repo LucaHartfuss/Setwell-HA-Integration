@@ -55,12 +55,15 @@ HINWEIS_KEYS = ("update_noetig", "geraet_doppelt", "wunsch_begrenzt", HINWEIS_SO
                 "konfiguration_abgelehnt", "gesperrt")
 # Meldungen der Weiche mit eigenem Text je Code (Uebersetzung `issues.<translation_key>`): `update_noetig` nennt in
 # `params.ende` das Datum (ISO), nach dem die urspruenglichen Werte wieder gelten; ohne lesbares Datum und bei
-# `update_noetig_unbekannt` gilt der Text ohne Datum. `updates_veraltet` nennt in `params.grund` einen Code.
+# `update_noetig_unbekannt` gilt der Text ohne Datum; `update_noetig_mindest` (orange) gilt ohne kritischen Eintrag, also
+# ohne Notbetrieb und ohne Datum. `updates_veraltet` nennt in `params.grund` einen Code.
 MELDUNG_UPDATE_NOETIG = "meldung.update_noetig"
 MELDUNG_UPDATE_NOETIG_UNBEKANNT = "meldung.update_noetig_unbekannt"
+MELDUNG_UPDATE_NOETIG_MINDEST = "meldung.update_noetig_mindest"
 MELDUNG_UPDATES_VERALTET = "meldung.updates_veraltet"
 ISSUE_UPDATE_NOETIG_ENDE = "update_noetig_ende"
 ISSUE_UPDATE_NOETIG_UNBEKANNT = "update_noetig_unbekannt"
+ISSUE_UPDATE_NOETIG_MINDEST = "update_noetig_mindest"
 ISSUE_UPDATES_VERALTET = "updates_veraltet"
 MELDUNG_DATUM_RE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 MELDUNG_GRUND_RE = re.compile(r"[a-z][a-z0-9_]{0,63}")
