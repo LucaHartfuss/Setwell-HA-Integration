@@ -5,6 +5,16 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 ## Unveröffentlicht
 
+- Gibt die Integration eine Push-Meldung nach 24 Stunden ohne erfolgreichen Versand auf, feuert sie einmal je
+  aufgegebenem Eintrag das Ereignis `smartheat_push_aufgegeben` mit `schema`, `stufe` (`rot` oder `orange`) und `kreis`
+  (Nummer oder leer), ohne Code, Text, Ziele oder Zeit. Das Add-on kann das Gerät damit darauf hinweisen, dass Pushes
+  nicht ankommen. Erinnerungen, ein Versand ohne Ziele und erfolgreiche Pushes feuern es nicht.
+- Meldungen der Update-Weiche in Home Assistant: Ist das Add-on unter einer kritischen Mindestversion
+  (`meldung.update_noetig`), zeigt die Integration einen roten Reparatur-Hinweis mit dem Datum, nach dem die
+  ursprünglichen Werte wieder gelten (deutsch TT.MM.JJJJ, sonst JJJJ-MM-TT); fehlt das Datum oder ist es unlesbar
+  (auch bei `meldung.update_noetig_unbekannt`), steht derselbe Hinweis ohne Datum. `meldung.updates_veraltet` zeigt einen
+  orangen Hinweis mit dem Grund als Code (unlesbar: `unbekannt`). Der Hinweis endet mit der Rücknahme der Meldung. Die
+  Meldung `integration_veraltet` zeigt das Add-on selbst; die Integration bildet dafür keinen eigenen Text.
 - Die Option beim Entfernen des Eintrags heißt jetzt „Zusätzlich die Freigabe aus dem Konto anfragen“: das Gerät löst sich
   nicht mehr selbst aus dem Konto, es fragt die Freigabe an und bleibt im Konto, bis der Eigentümer sie im Portal
   bestätigt (er bekommt eine Nachricht). Das Verhalten der Integration ist unverändert, nur der Text der Option.

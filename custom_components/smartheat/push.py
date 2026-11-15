@@ -11,7 +11,11 @@ Die Ziele (Notify-Dienste) und die Regeln (Ruhezeit, Tageslimit, stummgeschaltet
 Status-Ereignis und werden nie gespeichert; bis zum ersten Ereignis bleibt eine Meldung ausstehend, ohne Ziele
 (leere Liste) ist der Push aus. Ruhezeit und Tageswechsel folgen der Zeitzone von Home Assistant. Der Store haelt den
 Tageszaehler, aufgeschobene und offene Meldungen mit dem Zeitpunkt der letzten Sendung und die Fehlversuche -- damit
-ein Neustart von Home Assistant keinen zweiten Push fuer denselben offenen Befund ausloest."""
+ein Neustart von Home Assistant keinen zweiten Push fuer denselben offenen Befund ausloest.
+
+Gibt die Integration eine Meldung nach 24 Stunden ohne erfolgreichen Versand auf, feuert sie einmal je aufgegebenem Eintrag
+das Ereignis PUSH_AUFGEGEBEN_EVENT (nur Schema, Stufe und Kreis), damit das Add-on das Geraet darauf hinweisen kann; eine
+Erinnerung, ein Versand ohne Ziele und ein erfolgreicher Versand feuern es nicht."""
 from __future__ import annotations
 
 import asyncio
@@ -33,6 +37,9 @@ from .const import (
     EINRICHTUNG_MAX_KREISE,
     HA_DIENST_RE,
     PRODUKT_NAME,
+    PUSH_AUFGEGEBEN_EVENT,
+    PUSH_AUFGEGEBEN_EVENT_FIELDS,
+    PUSH_AUFGEGEBEN_EVENT_SCHEMA,
     PUSH_EINTRAEGE_MAX,
     PUSH_HINWEISE_AUS_MAX,
     PUSH_RUHE_BIS,
@@ -237,6 +244,7 @@ class Push:
         lokal = jetzt_dt.astimezone(zone)
         geaendert = self._tageswechsel(lokal.date().isoformat())
         ruhe = self._in_ruhe(lokal.hour)
+        aufgegeben: list[dict[str, Any]] = []
         for eintrag in list(self._eintraege.values()):
             if eintrag["stufe"] == PUSH_STUFE_ROT and not eintrag["ausstehend"] and eintrag["letzte"] is not None \
                     and jetzt - eintrag["letzte"] >= PUSH_WIEDERHOLUNG_SECONDS:
@@ -250,6 +258,7 @@ class Push:
             if jetzt - eintrag["versuch_seit"] >= PUSH_WIEDERHOLUNG_SECONDS:
                 _LOGGER.warning("Push: Meldung %s nach %s Versuchen aufgegeben", eintrag["code"], eintrag["versuche"])
                 self._erledigen(eintrag, jetzt)
+                aufgegeben.append(eintrag)
                 geaendert = True
             elif self._ziele is None:
                 continue
@@ -261,6 +270,10 @@ class Push:
                 geaendert = True
         if geaendert:
             await self._speichern()
+        # Erst nach dem Speichern: ein Neustart dazwischen meldet den aufgegebenen Eintrag nicht ein zweites Mal.
+        for eintrag in aufgegeben:
+            werte = {"schema": PUSH_AUFGEGEBEN_EVENT_SCHEMA, "stufe": eintrag["stufe"], "kreis": eintrag["kreis"]}
+            self._hass.bus.async_fire(PUSH_AUFGEGEBEN_EVENT, {feld: werte[feld] for feld in PUSH_AUFGEGEBEN_EVENT_FIELDS})
 
     def _tageswechsel(self, heute: str) -> bool:
         if heute == self._tag:

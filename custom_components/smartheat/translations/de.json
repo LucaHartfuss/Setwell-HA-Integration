@@ -323,6 +323,9 @@
   },
   "issues": {
     "update_noetig": {"title": "SmartHeat: Add-on aktualisieren", "description": "{text} Einstellungen → Add-ons → Heizungsbrücke → Aktualisieren."},
+    "update_noetig_ende": {"title": "SmartHeat: Add-on aktualisieren", "description": "Das Add-on ist zu alt für den SmartHeat-Dienst. Die Heizung läuft bis {ende} im Notbetrieb weiter, danach stellt SmartHeat die ursprünglichen Werte wieder ein und beendet die Steuerung. Bitte das Add-on aktualisieren: Einstellungen → Add-ons → Heizungsbrücke → Aktualisieren."},
+    "update_noetig_unbekannt": {"title": "SmartHeat: Add-on aktualisieren", "description": "Das Add-on ist zu alt für den SmartHeat-Dienst. Bitte das Add-on aktualisieren: Einstellungen → Add-ons → Heizungsbrücke → Aktualisieren."},
+    "updates_veraltet": {"title": "SmartHeat: Updates nicht aktuell", "description": "Die installierte Software wird nicht mehr aktuell gehalten (Grund: {grund}). Bitte die Einstellung zu Updates prüfen."},
     "geraet_doppelt": {"title": "SmartHeat läuft doppelt", "description": "{text} Bitte die zweite Home-Assistant-Instanz mit demselben Add-on stoppen (z. B. ein eingespieltes Backup)."},
     "wunsch_begrenzt": {"title": "SmartHeat: Wunschtemperatur begrenzt", "description": "{text}"},
     "soll_quelle_aus": {"title": "SmartHeat: Thermostat ist aus", "description": "{text}"},

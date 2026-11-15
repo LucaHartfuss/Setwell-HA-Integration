@@ -51,12 +51,12 @@ def _own_issues(hass) -> dict:
 async def test_device_hints_become_repairs_and_disappear(hass):
     await _setup(hass)
     hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": [
-        _meldung("update_noetig", "rot", "meldung.update_noetig"),
+        _meldung("geraet_doppelt", "rot", "meldung.geraet_doppelt"),
         _meldung("neu_vom_server", "orange", "meldung.neu_vom_server")]})
     await hass.async_block_till_done()
     registry = ir.async_get(hass)
-    issue = registry.async_get_issue(DOMAIN, "hinweis_update_noetig")
-    assert issue is not None and issue.severity == ir.IssueSeverity.ERROR and issue.translation_key == "update_noetig"
+    issue = registry.async_get_issue(DOMAIN, "hinweis_geraet_doppelt")
+    assert issue is not None and issue.severity == ir.IssueSeverity.ERROR and issue.translation_key == "geraet_doppelt"
     assert issue.is_fixable is False
     other = registry.async_get_issue(DOMAIN, hinweis_issue_id("neu_vom_server"))
     assert other.translation_key == "geraet_hinweis"
@@ -64,7 +64,7 @@ async def test_device_hints_become_repairs_and_disappear(hass):
     assert other.severity == ir.IssueSeverity.WARNING
     hass.bus.async_fire(STATUS_EVENT, EVENT)
     await hass.async_block_till_done()
-    assert registry.async_get_issue(DOMAIN, "hinweis_update_noetig") is None
+    assert registry.async_get_issue(DOMAIN, "hinweis_geraet_doppelt") is None
     assert registry.async_get_issue(DOMAIN, hinweis_issue_id("neu_vom_server")) is None
 
 
@@ -262,9 +262,9 @@ _MARKDOWN_ZEICHEN = "\\`*_[]()<>#!|~&:.@"
 def test_der_code_erscheint_als_klartext(hass):
     """Der Code einer Meldung ist der einzige Text in der Beschreibung (bis die Texte je Code in den Uebersetzungen
     stehen); HA stellt sie als Markdown dar, daher steht er maskiert."""
-    repairs.async_update(hass, [_meldung("gesperrt", "rot", "meldung.update_noetig")])
+    repairs.async_update(hass, [_meldung("gesperrt", "rot", "meldung.geraet_doppelt")])
     angezeigt = ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_gesperrt").translation_placeholders["text"]
-    assert angezeigt == "meldung\\.update\\_noetig"
+    assert angezeigt == "meldung\\.geraet\\_doppelt"
 
 
 def test_klartext_maskiert_jedes_markdown_zeichen():
@@ -365,14 +365,14 @@ def test_klartext_wird_gekuerzt():
 async def test_hint_issues_keep_todays_ids_and_show_the_code(hass):
     """Die Issue-ID ist nur `hinweis_<schluessel>` (nicht je Eintrag, passt zu `single_config_entry`); die Beschreibung
     nennt vorerst den Code der Meldung (maskiert: `.` und `_`), bis die Texte je Code in den Uebersetzungen stehen; die
-    Anweisung von `update_noetig` und `konfiguration_abgelehnt` steht in der Beschreibung."""
+    Anweisung von `geraet_doppelt` und `konfiguration_abgelehnt` steht in der Beschreibung."""
     entry = await _setup(hass)
     hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": [
-        _meldung("update_noetig", "rot", "meldung.update_noetig"),
+        _meldung("geraet_doppelt", "rot", "meldung.geraet_doppelt"),
         _meldung("konfiguration_abgelehnt", "rot", "meldung.konfiguration_abgelehnt")]})
     await hass.async_block_till_done()
     issues = _own_issues(hass)
-    assert set(issues) == {"hinweis_update_noetig", "hinweis_konfiguration_abgelehnt"}
+    assert set(issues) == {"hinweis_geraet_doppelt", "hinweis_konfiguration_abgelehnt"}
     assert not any(entry.entry_id in issue_id for issue_id in issues)
 
     def beschreibung(texte, issue_id):
@@ -382,10 +382,12 @@ async def test_hint_issues_keep_todays_ids_and_show_the_code(hass):
 
     en = await async_get_translations(hass, "en", "issues", [DOMAIN])
     de = await async_get_translations(hass, "de", "issues", [DOMAIN])
-    assert beschreibung(en, "hinweis_update_noetig") == (
-        "meldung\\.update\\_noetig Settings → Add-ons → Heizungsbrücke → Update.")
-    assert beschreibung(de, "hinweis_update_noetig") == (
-        "meldung\\.update\\_noetig Einstellungen → Add-ons → Heizungsbrücke → Aktualisieren.")
+    assert beschreibung(en, "hinweis_geraet_doppelt") == (
+        "meldung\\.geraet\\_doppelt Please stop the second Home Assistant instance with the same add-on (e.g. a "
+        "restored backup).")
+    assert beschreibung(de, "hinweis_geraet_doppelt") == (
+        "meldung\\.geraet\\_doppelt Bitte die zweite Home-Assistant-Instanz mit demselben Add-on stoppen "
+        "(z. B. ein eingespieltes Backup).")
     assert beschreibung(en, "hinweis_konfiguration_abgelehnt") == (
         "The add-on rejected the new setting: meldung\\.konfiguration\\_abgelehnt Please check it under SmartHeat → "
         "Reconfigure.")
@@ -398,6 +400,143 @@ def test_every_known_hint_has_a_text_with_the_device_text(path):
         assert issues[key]["title"].strip(), (path, key)
         assert "{text}" in issues[key]["description"], (path, key)
     assert "complete_setup" not in issues
+
+
+# --- Meldungen der Weiche (Mindestversion des Add-ons, Frische der Software) ---
+
+_UPDATE_NOETIG = "meldung.update_noetig"
+_UPDATE_NOETIG_UNBEKANNT = "meldung.update_noetig_unbekannt"
+_UPDATES_VERALTET = "meldung.updates_veraltet"
+_ID_FRISCHE = hinweis_issue_id("updates_veraltet")
+
+
+def _issue(hass, issue_id: str):
+    return ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
+
+
+async def _beschreibung(hass, issue, sprache: str = "en") -> str:
+    texte = await async_get_translations(hass, sprache, "issues", [DOMAIN])
+    vorlage = texte[f"component.{DOMAIN}.issues.{issue.translation_key}.description"]
+    return vorlage.format(**(issue.translation_placeholders or {}))
+
+
+async def test_update_noetig_mit_datum_ist_rot_und_nennt_das_datum(hass):
+    repairs.async_update(hass, [_meldung("update_noetig", "rot", _UPDATE_NOETIG, params={"ende": "2026-12-13"})])
+    issue = _issue(hass, "hinweis_update_noetig")
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert not issue.is_fixable
+    assert issue.translation_key == "update_noetig_ende"
+    assert issue.translation_placeholders == {"ende": "2026-12-13"}
+    en = await _beschreibung(hass, issue)
+    assert "2026-12-13" in en and "{" not in en
+    assert "Add-ons" in en
+
+
+async def test_das_datum_steht_in_deutscher_sprache_als_tag_monat_jahr(hass):
+    hass.config.language = "de"
+    repairs.async_update(hass, [_meldung("update_noetig", "rot", _UPDATE_NOETIG, params={"ende": "2026-12-03"})])
+    issue = _issue(hass, "hinweis_update_noetig")
+    assert issue.translation_placeholders == {"ende": "03.12.2026"}
+    assert "03.12.2026" in await _beschreibung(hass, issue, "de")
+
+
+async def test_update_noetig_unbekannt_ist_rot_ohne_datum(hass):
+    repairs.async_update(hass, [_meldung("update_noetig", "rot", _UPDATE_NOETIG_UNBEKANNT)])
+    issue = _issue(hass, "hinweis_update_noetig")
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_key == "update_noetig_unbekannt"
+    assert not issue.translation_placeholders
+    for sprache in ("en", "de"):
+        text = await _beschreibung(hass, issue, sprache)
+        assert text.strip() and "{" not in text and not re.search(r"\d{2,4}[-.]\d{2}", text)
+
+
+@pytest.mark.parametrize("params", [
+    {}, None, "2026-12-13", ["2026-12-13"], {"ende": None}, {"ende": 20261213}, {"ende": True}, {"ende": ""},
+    {"ende": "morgen"}, {"ende": "2026-13-45"}, {"ende": "20261213"}, {"ende": "2026-W50-5"},
+    {"ende": "2026-12-13 *fett*"}, {"ende": "2026-12-13\n[x](https://boese.example)"}, {"ende": "2026-12-13" * 100},
+])
+async def test_ein_unlesbares_datum_gibt_den_text_ohne_datum_und_keinen_absturz(hass, params):
+    repairs.async_update(hass, [_meldung("update_noetig", "rot", _UPDATE_NOETIG, params=params)])
+    issue = _issue(hass, "hinweis_update_noetig")
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_key == "update_noetig_unbekannt"
+    assert not issue.translation_placeholders
+    assert "boese" not in await _beschreibung(hass, issue)
+
+
+async def test_updates_veraltet_ist_orange_und_nennt_den_grund_als_code(hass):
+    repairs.async_update(hass, [_meldung("updates_veraltet", "orange", _UPDATES_VERALTET,
+                                         params={"grund": "kein_angebot"})])
+    issue = _issue(hass, _ID_FRISCHE)
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert issue.translation_key == "updates_veraltet"
+    assert issue.translation_placeholders == {"grund": "kein\\_angebot"}
+    text = await _beschreibung(hass, issue)
+    assert "kein\\_angebot" in text and "{" not in text
+
+
+@pytest.mark.parametrize("params", [{}, None, {"grund": None}, {"grund": 5}, {"grund": "Kein Angebot [x](y)"},
+                                    {"grund": "a" * 500}])
+async def test_updates_veraltet_ohne_lesbaren_grund_nennt_unbekannt(hass, params):
+    repairs.async_update(hass, [_meldung("updates_veraltet", "orange", _UPDATES_VERALTET, params=params)])
+    issue = _issue(hass, _ID_FRISCHE)
+    assert issue.translation_key == "updates_veraltet"
+    assert issue.translation_placeholders == {"grund": "unbekannt"}
+
+
+async def test_die_rotes_update_noetig_geht_mit_der_ruecknahme(hass):
+    repairs.async_update(hass, [_meldung("update_noetig", "rot", _UPDATE_NOETIG, params={"ende": "2026-12-13"})])
+    assert _issue(hass, "hinweis_update_noetig") is not None
+    repairs.async_update(hass, [])
+    assert _issue(hass, "hinweis_update_noetig") is None
+
+
+async def test_updates_veraltet_geht_mit_der_ruecknahme(hass):
+    repairs.async_update(hass, [_meldung("updates_veraltet", "orange", _UPDATES_VERALTET,
+                                         params={"grund": "ablauf"})])
+    assert _issue(hass, _ID_FRISCHE) is not None
+    repairs.async_update(hass, [])
+    assert _issue(hass, _ID_FRISCHE) is None
+
+
+async def test_die_fassung_wechselt_ohne_zweites_issue(hass):
+    repairs.async_update(hass, [_meldung("update_noetig", "rot", _UPDATE_NOETIG_UNBEKANNT)])
+    repairs.async_update(hass, [_meldung("update_noetig", "rot", _UPDATE_NOETIG, params={"ende": "2026-12-13"})])
+    assert _issue(hass, "hinweis_update_noetig").translation_key == "update_noetig_ende"
+    assert set(_own_issues(hass)) == {"hinweis_update_noetig"}
+
+
+async def test_das_status_ereignis_oeffnet_und_schliesst_beide_reparaturen(hass):
+    await _setup(hass)
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": [
+        _meldung("update_noetig", "rot", _UPDATE_NOETIG, params={"ende": "2026-12-13"}),
+        _meldung("updates_veraltet", "orange", _UPDATES_VERALTET, params={"grund": "ablauf"})]})
+    await hass.async_block_till_done()
+    assert set(_own_issues(hass)) == {"hinweis_update_noetig", _ID_FRISCHE}
+    assert _issue(hass, "hinweis_update_noetig").severity == ir.IssueSeverity.ERROR
+    assert _issue(hass, _ID_FRISCHE).severity == ir.IssueSeverity.WARNING
+    hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": []})
+    await hass.async_block_till_done()
+    assert _own_issues(hass) == {}
+
+
+async def test_integration_veraltet_ist_keine_meldung_der_integration(hass):
+    """Die Integration kann ihre eigene Veraltung nicht lesen; sie bildet auch keinen eigenen Text dafuer (das Add-on
+    zeigt sie selbst): kommt der Code doch an, bleibt es beim allgemeinen Hinweis ohne zweites Issue."""
+    repairs.async_update(hass, [_meldung("integration_veraltet", "orange", "meldung.integration_veraltet")])
+    assert len(_own_issues(hass)) == 1
+    assert _issue(hass, hinweis_issue_id("integration_veraltet")).translation_key == "geraet_hinweis"
+
+
+@pytest.mark.parametrize("path", ["strings.json", "translations/en.json", "translations/de.json"])
+def test_die_texte_der_weiche_haben_titel_und_genau_ihre_platzhalter(path):
+    issues = json.loads((_COMPONENT / path).read_text())["issues"]
+    erwartet = {"update_noetig_ende": {"ende"}, "update_noetig_unbekannt": set(), "updates_veraltet": {"grund"}}
+    for key, platzhalter in erwartet.items():
+        assert issues[key]["title"].strip(), (path, key)
+        assert set(re.findall(r"\{(\w+)\}", issues[key]["description"])) == platzhalter, (path, key)
 
 
 # --- Schalter "Automatische Updates" des Add-ons ---

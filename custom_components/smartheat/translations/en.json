@@ -323,6 +323,9 @@
   },
   "issues": {
     "update_noetig": {"title": "SmartHeat: update the add-on", "description": "{text} Settings → Add-ons → Heizungsbrücke → Update."},
+    "update_noetig_ende": {"title": "SmartHeat: update the add-on", "description": "The add-on is too old for the SmartHeat service. The heating keeps running in emergency mode until {ende}; after that SmartHeat restores the original values and ends the control. Please update the add-on: Settings → Add-ons → Heizungsbrücke → Update."},
+    "update_noetig_unbekannt": {"title": "SmartHeat: update the add-on", "description": "The add-on is too old for the SmartHeat service. Please update the add-on: Settings → Add-ons → Heizungsbrücke → Update."},
+    "updates_veraltet": {"title": "SmartHeat: updates not kept current", "description": "The installed software is no longer kept up to date (reason: {grund}). Please check the update setting."},
     "geraet_doppelt": {"title": "SmartHeat is running twice", "description": "{text} Please stop the second Home Assistant instance with the same add-on (e.g. a restored backup)."},
     "wunsch_begrenzt": {"title": "SmartHeat: desired temperature limited", "description": "{text}"},
     "soll_quelle_aus": {"title": "SmartHeat: thermostat is off", "description": "{text}"},
