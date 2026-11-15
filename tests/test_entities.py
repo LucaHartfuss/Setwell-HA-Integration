@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from homeassistant.const import EntityCategory
-from homeassistant.core import Context, State
+from homeassistant.core import Context, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import mock_restore_cache
@@ -381,7 +381,8 @@ async def test_die_wunschtemperatur_eines_kreises_meldet_dessen_nummer(hass):
     await _setup(hass)
     await _fire(hass, _ereignis(nummern=(1, 2)))
     gesehen = []
-    hass.bus.async_listen(WUNSCH_EVENT, lambda event: gesehen.append(event.data))
+    # `callback`: ein einfacher Listener liefe im Executor, die Reihenfolge der Ereignisse waere dann nicht gesichert
+    hass.bus.async_listen(WUNSCH_EVENT, callback(lambda event: gesehen.append(event.data)))
 
     await hass.services.async_call("number", "set_value", {
         "entity_id": "number.smartheat_k2_wunschtemperatur", "value": 19.0}, blocking=True, context=Context())
