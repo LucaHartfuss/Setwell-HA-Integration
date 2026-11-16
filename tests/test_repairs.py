@@ -406,6 +406,7 @@ def test_every_known_hint_has_a_text_with_the_device_text(path):
 
 _UPDATE_NOETIG = "meldung.update_noetig"
 _UPDATE_NOETIG_UNBEKANNT = "meldung.update_noetig_unbekannt"
+_UPDATE_NOETIG_MINDEST = "meldung.update_noetig_mindest"
 _UPDATES_VERALTET = "meldung.updates_veraltet"
 _ID_FRISCHE = hinweis_issue_id("updates_veraltet")
 
@@ -449,6 +450,19 @@ async def test_update_noetig_unbekannt_ist_rot_ohne_datum(hass):
     for sprache in ("en", "de"):
         text = await _beschreibung(hass, issue, sprache)
         assert text.strip() and "{" not in text and not re.search(r"\d{2,4}[-.]\d{2}", text)
+
+
+async def test_update_noetig_mindest_ist_eine_warnung_ohne_datum_und_ohne_notbetrieb(hass):
+    repairs.async_update(hass, [_meldung("update_noetig", "orange", _UPDATE_NOETIG_MINDEST)])
+    issue = _issue(hass, "hinweis_update_noetig")
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert issue.translation_key == "update_noetig_mindest"
+    assert not issue.translation_placeholders
+    for sprache in ("en", "de"):
+        text = await _beschreibung(hass, issue, sprache)
+        assert text.strip() and "{" not in text and not re.search(r"\d{2,4}[-.]\d{2}", text)
+        assert "otbetrieb" not in text and "emergency" not in text
 
 
 @pytest.mark.parametrize("params", [
@@ -508,6 +522,14 @@ async def test_die_fassung_wechselt_ohne_zweites_issue(hass):
     assert set(_own_issues(hass)) == {"hinweis_update_noetig"}
 
 
+async def test_der_wechsel_von_orange_auf_rot_bleibt_ein_issue_und_wird_zum_fehler(hass):
+    repairs.async_update(hass, [_meldung("update_noetig", "orange", _UPDATE_NOETIG_MINDEST)])
+    repairs.async_update(hass, [_meldung("update_noetig", "rot", _UPDATE_NOETIG, params={"ende": "2026-12-13"})])
+    issue = _issue(hass, "hinweis_update_noetig")
+    assert (issue.translation_key, issue.severity) == ("update_noetig_ende", ir.IssueSeverity.ERROR)
+    assert set(_own_issues(hass)) == {"hinweis_update_noetig"}
+
+
 async def test_das_status_ereignis_oeffnet_und_schliesst_beide_reparaturen(hass):
     await _setup(hass)
     hass.bus.async_fire(STATUS_EVENT, {**EVENT, "meldungen": [
@@ -533,7 +555,8 @@ async def test_integration_veraltet_ist_keine_meldung_der_integration(hass):
 @pytest.mark.parametrize("path", ["strings.json", "translations/en.json", "translations/de.json"])
 def test_die_texte_der_weiche_haben_titel_und_genau_ihre_platzhalter(path):
     issues = json.loads((_COMPONENT / path).read_text())["issues"]
-    erwartet = {"update_noetig_ende": {"ende"}, "update_noetig_unbekannt": set(), "updates_veraltet": {"grund"}}
+    erwartet = {"update_noetig_ende": {"ende"}, "update_noetig_unbekannt": set(), "update_noetig_mindest": set(),
+                "updates_veraltet": {"grund"}}
     for key, platzhalter in erwartet.items():
         assert issues[key]["title"].strip(), (path, key)
         assert set(re.findall(r"\{(\w+)\}", issues[key]["description"])) == platzhalter, (path, key)

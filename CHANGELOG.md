@@ -13,8 +13,10 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
   (`meldung.update_noetig`), zeigt die Integration einen roten Reparatur-Hinweis mit dem Datum, nach dem die
   ursprünglichen Werte wieder gelten (deutsch TT.MM.JJJJ, sonst JJJJ-MM-TT); fehlt das Datum oder ist es unlesbar
   (auch bei `meldung.update_noetig_unbekannt`), steht derselbe Hinweis ohne Datum. `meldung.updates_veraltet` zeigt einen
-  orangen Hinweis mit dem Grund als Code (unlesbar: `unbekannt`). Der Hinweis endet mit der Rücknahme der Meldung. Die
-  Meldung `integration_veraltet` zeigt das Add-on selbst; die Integration bildet dafür keinen eigenen Text.
+  orangen Hinweis mit dem Grund als Code (unlesbar: `unbekannt`). Liegt das Add-on nur unter einer gewöhnlich angehobenen
+  Mindestversion, ohne kritischen Eintrag (`meldung.update_noetig_mindest`), zeigt die Integration einen orangen
+  Hinweis ohne Datum und ohne Notbetrieb („bei Gelegenheit aktualisieren“). Der Hinweis endet mit der Rücknahme der
+  Meldung. Die Meldung `integration_veraltet` zeigt das Add-on selbst; die Integration bildet dafür keinen eigenen Text.
 - Die Option beim Entfernen des Eintrags heißt jetzt „Zusätzlich die Freigabe aus dem Konto anfragen“: das Gerät löst sich
   nicht mehr selbst aus dem Konto, es fragt die Freigabe an und bleibt im Konto, bis der Eigentümer sie im Portal
   bestätigt (er bekommt eine Nachricht). Das Verhalten der Integration ist unverändert, nur der Text der Option.
