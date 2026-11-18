@@ -3,9 +3,12 @@ ein, zeigt seinen Status als Entities, macht seine Hinweise zu Reparatur-Hinweis
 und ueberwacht die Heizungsbruecke (zweiter Waechter); das Loeschen des Eintrags meldet das Geraet lokal ab."""
 from __future__ import annotations
 
+import contextlib
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
@@ -35,8 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # Nach einem Entfernen und Neueinrichten stellt Home Assistant beim Anlegen der Entities die alten IDs aus den
     # geloeschten Registry-Eintraegen wieder her; diese Eintraege gab es vor dem Plattform-Setup noch nicht. Ohne
-    # Aenderungsbedarf bleibt dieser zweite Lauf ohne Wirkung (keine Sicherung, kein Schreiben).
-    await registry_umzug.async_pflegen(hass, entry)
+    # Aenderungsbedarf bleibt dieser zweite Lauf ohne Wirkung (keine Sicherung, kein Schreiben). Scheitert er, laeuft der
+    # Eintrag weiter (Plattformen und Waechter laufen schon); das naechste Laden plant den Rest.
+    with contextlib.suppress(ConfigEntryNotReady):  # registry_umzug hat den Fehler schon geloggt
+        await registry_umzug.async_pflegen(hass, entry)
     return True
 
 

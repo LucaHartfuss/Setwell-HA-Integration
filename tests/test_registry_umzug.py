@@ -391,3 +391,21 @@ async def test_nach_dem_neu_einrichten_tragen_die_wiederhergestellten_entities_d
     assert not [e for e in eigene.values() if "smartheat_client1" in e.entity_id]
     assert hass.states.get("sensor.smartheat_status") is not None
     assert hass.states.get("sensor.smartheat_client1_status") is None
+
+
+async def test_scheitert_der_zweite_lauf_nach_dem_neu_einrichten_laeuft_der_eintrag_weiter(hass, monkeypatch):
+    alt = make_device_entry(hass, tenant_id="client1")
+    _alte_entities(hass, alt)
+    await hass.config_entries.async_remove(alt.entry_id)
+    await hass.async_block_till_done()
+    neu = make_device_entry(hass, tenant_id="client1")
+
+    def kaputt(*args, **kwargs):
+        raise HomeAssistantError("kaputt")
+
+    monkeypatch.setattr(er.async_get(hass), "async_update_entity", kaputt)
+    assert await hass.config_entries.async_setup(neu.entry_id)
+    await hass.async_block_till_done()
+
+    assert neu.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.smartheat_client1_status") is not None  # bleibt bis zum naechsten Laden
