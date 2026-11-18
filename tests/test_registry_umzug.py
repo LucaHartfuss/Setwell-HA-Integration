@@ -370,3 +370,24 @@ async def test_der_umzug_findet_auch_anlagen_mit_ungewoehnlichem_namen(hass, ten
 
     assert registry.async_get("sensor.smartheat_k1_zustand").unique_id == f"{tenant_id}_k1_zustand"
     assert registry.async_get("sensor.smartheat_status").unique_id == f"{tenant_id}_status"
+
+
+async def test_nach_dem_neu_einrichten_tragen_die_wiederhergestellten_entities_die_festen_ids(hass):
+    """Wurde der Eintrag einer Anlage mit alten IDs entfernt und neu eingerichtet, stellt Home Assistant die IDs aus den
+    geloeschten Registry-Eintraegen beim Anlegen der Entities wieder her; schon das erste Laden benennt sie um."""
+    alt = make_device_entry(hass, tenant_id="client1")
+    _alte_entities(hass, alt)
+    await hass.config_entries.async_remove(alt.entry_id)
+    await hass.async_block_till_done()
+    registry = er.async_get(hass)
+    assert registry.deleted_entities
+    neu = make_device_entry(hass, tenant_id="client1")
+
+    await _laden(hass, neu)
+
+    eigene = _eigene(hass, neu)
+    assert eigene["client1_status"].entity_id == "sensor.smartheat_status"
+    assert eigene["client1_notbetrieb"].entity_id == "binary_sensor.smartheat_notbetrieb"
+    assert not [e for e in eigene.values() if "smartheat_client1" in e.entity_id]
+    assert hass.states.get("sensor.smartheat_status") is not None
+    assert hass.states.get("sensor.smartheat_client1_status") is None

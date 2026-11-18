@@ -5,6 +5,9 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 ## Unveröffentlicht
 
+- Wird ein Eintrag mit alten Entity-IDs entfernt und die Anlage neu eingerichtet, stellt Home Assistant die alten IDs
+  (`sensor.smartheat_<anlage>_status` usw.) beim Anlegen der Entities wieder her. Die Integration benennt sie jetzt schon
+  beim ersten Laden auf die festen IDs um, ein zweites Laden ist nicht mehr nötig.
 - Gibt die Integration eine Push-Meldung nach 24 Stunden ohne erfolgreichen Versand auf, feuert sie einmal je
   aufgegebenem Eintrag das Ereignis `smartheat_push_aufgegeben` mit `schema`, `stufe` (`rot` oder `orange`) und `kreis`
   (Nummer oder leer), ohne Code, Text, Ziele oder Zeit. Das Add-on kann das Gerät damit darauf hinweisen, dass Pushes

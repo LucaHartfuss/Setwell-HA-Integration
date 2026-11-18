@@ -33,6 +33,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.push.async_laden()
     coordinator.async_start(str(integration.version))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Nach einem Entfernen und Neueinrichten stellt Home Assistant beim Anlegen der Entities die alten IDs aus den
+    # geloeschten Registry-Eintraegen wieder her; diese Eintraege gab es vor dem Plattform-Setup noch nicht. Ohne
+    # Aenderungsbedarf bleibt dieser zweite Lauf ohne Wirkung (keine Sicherung, kein Schreiben).
+    await registry_umzug.async_pflegen(hass, entry)
     return True
 
 
