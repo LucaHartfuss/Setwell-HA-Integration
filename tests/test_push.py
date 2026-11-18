@@ -572,7 +572,7 @@ async def test_the_tick_is_registered_and_runs_the_reminder(hass, push, dienst, 
     await _rot(push)
     _um(freezer, "12:00:00", tag=12)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)  # der Takt laeuft als Hintergrund-Task
 
     assert len(dienst) == 2
     for abraeumen in abraeumer:  # der Takt endet mit dem Eintrag
