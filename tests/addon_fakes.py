@@ -21,9 +21,6 @@ def status_event(tenant_id, status, *, grund=None, kreise=None, **overrides) -> 
     event = json.loads(STATUS_EREIGNIS_FIXTURE.read_text())
     event.update({"tenant_id": tenant_id, "status": status, "grund": grund, "geraet_id": GERAET_ID})
     kreisfelder = {key: overrides.pop(key) for key in list(overrides) if key in STATUS_KREIS_FIELDS}
-    # Die Fixture stammt vom Add-on; solange es `abwesend` nicht liefert, gilt hier die Form des Vertrags: keine Abwesenheit.
-    for kreis in event["kreise"]:
-        kreis.setdefault("abwesend", None)
     event["kreise"][0].update(kreisfelder)
     if kreise is not None:
         event["kreise"] = kreise

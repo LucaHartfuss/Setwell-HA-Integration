@@ -137,6 +137,12 @@ def test_meldung_without_code_is_a_warning_with_empty_text(hass):
         ir.IssueSeverity.WARNING, "soll_quelle_aus", {"text": ""})
 
 
+def test_der_hinweis_abwesend_abgelehnt_hat_einen_eigenen_text_mit_dem_grund_als_code(hass):
+    repairs.async_update(hass, [_meldung("abwesend_abgelehnt", "orange", code="meldung.abwesend_abgelehnt")])
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_abwesend_abgelehnt")
+    assert (issue.severity, issue.translation_key) == (ir.IssueSeverity.WARNING, "abwesend_abgelehnt")
+
+
 @pytest.mark.parametrize("code", ["Freier Text mit Leerzeichen", "a" * 41, "meldung..x", "a.b.c.d", 3, None])
 def test_a_code_that_is_not_a_code_gives_no_text(hass, code):
     """Was kein Code ist (freier Text), kommt nie in die Beschreibung."""

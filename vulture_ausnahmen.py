@@ -11,6 +11,11 @@ async_remove_entry  # HA-Hook: Eintrag entfernt
 async_remove_config_entry_device  # HA-Hook: Geraet von Hand loeschen (Kreis-Geraete)
 async_get_config_entry_diagnostics  # HA-Hook: Diagnose-Download des Eintrags (diagnostics.py)
 
+# Schema der Abwesenheits-Ereignisse: der Contract-Check liest es; gesendet wird das zuletzt gelesene Status-Schema
+# (`wunsch_schema`), das heute dasselbe ist.
+ABWESEND_EVENT_SCHEMA  # Contract-Check (Vertrag V5)
+ABWESEND_ENDE_EVENT_SCHEMA  # Contract-Check (Vertrag V5)
+
 # Config-Flow (config_flow.py): HA registriert den Flow ueber domain= und ruft Schritte als async_step_<step_id>.
 SmartHeatConfigFlow  # HA-Hook: ConfigFlow-Unterklasse, registriert ueber domain=
 VERSION  # HA liest ConfigFlow.VERSION (Migration der Eintraege)

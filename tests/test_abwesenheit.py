@@ -423,6 +423,8 @@ def test_die_dienstbeschreibung_und_die_uebersetzungen_sind_vollstaendig():
         for schluessel in ("abwesend_bis_vergangen", "abwesend_bis_zu_weit", "abwesend_temperatur_ungueltig",
                            "kreis_unbekannt", "nicht_abwesend"):
             assert text["exceptions"][schluessel]["message"], (datei, schluessel)
+        assert text["issues"]["abwesend_abgelehnt"]["title"], datei
+        assert "{text}" in text["issues"]["abwesend_abgelehnt"]["description"], datei
         assert text["entity"]["binary_sensor"]["abwesend"]["name"], datei
         assert text["entity"]["sensor"]["zurueck_am"]["name"], datei
         assert text["entity"]["button"]["abwesenheit_beenden"]["name"], datei

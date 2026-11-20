@@ -350,6 +350,7 @@
     "soll_quelle_aus": {"title": "SmartHeat: Thermostat ist aus", "description": "{text}"},
     "konfiguration_abgelehnt": {"title": "SmartHeat: Einstellung abgelehnt", "description": "Das Add-on hat die neue Einstellung abgelehnt: {text} Bitte unter SmartHeat → Neu konfigurieren prüfen."},
     "gesperrt": {"title": "SmartHeat: Gerät gesperrt", "description": "{text}"},
+    "abwesend_abgelehnt": {"title": "SmartHeat: Abwesenheit nicht übernommen", "description": "Das Add-on hat die Abwesenheit abgelehnt: {text} Bitte Rückkehrzeit und Temperatur prüfen."},
     "geraet_hinweis": {"title": "SmartHeat-Hinweis", "description": "{text}"},
     "geraet_hinweise_viele": {"title": "SmartHeat: weitere Hinweise", "description": "Das Gerät meldet {anzahl} weitere Hinweise, die hier nicht einzeln aufgeführt sind. Bitte die Heizungsanlage und das Add-on prüfen."},
     "integration_veraltet": {"title": "SmartHeat: Integration aktualisieren", "description": "Das Add-on ist neuer als diese Integration und spricht eine Version, die sie nicht liest. Die Werte erscheinen erst wieder, wenn die Integration mindestens auf Version {mindest_integration} aktualisiert ist. Einstellungen → Geräte & Dienste → HACS → SmartHeat → Aktualisieren."},

@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from .const import ABWESEND_EVENT, ABWESEND_MAX_TAGE, DOMAIN, RAUM_SOLL_MAX, RAUM_SOLL_MIN
+from .const import ABWESEND_EVENT, ABWESEND_EVENT_FIELDS, ABWESEND_MAX_TAGE, DOMAIN, RAUM_SOLL_MAX, RAUM_SOLL_MIN
 from .coordinator import SmartHeatCoordinator
 from .entity import endliche_zahl, pruefe_kreis_bereit
 from .geraete import kreis_nummer
@@ -86,10 +86,11 @@ async def _abwesend_bis(hass: HomeAssistant, call: ServiceCall) -> None:
     for coordinator, kreis in kreise:
         pruefe_kreis_bereit(coordinator, kreis)
     for coordinator, kreis in kreise:
-        daten = {"schema": coordinator.wunsch_schema, "kreis": kreis, "bis": bis.isoformat()}
+        werte = {"schema": coordinator.wunsch_schema, "kreis": kreis, "bis": bis.isoformat()}
         if temperatur is not None:
-            daten["temp"] = temperatur
-        hass.bus.async_fire(ABWESEND_EVENT, daten, context=call.context)
+            werte["temp"] = temperatur
+        hass.bus.async_fire(
+            ABWESEND_EVENT, {feld: werte[feld] for feld in ABWESEND_EVENT_FIELDS if feld in werte}, context=call.context)
 
 
 def async_register(hass: HomeAssistant) -> None:

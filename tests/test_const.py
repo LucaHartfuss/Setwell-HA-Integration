@@ -11,10 +11,13 @@ def test_status_event_schema_4_separates_the_plant_from_the_circuits():
         "hinweise", "geraet_id", "geraet_zustand", "server_verbunden", "meldungen", "anlage_name",
         "konfig_version", "mindest_integration", "benachrichtigung", "hinweise_aus", "push_regeln", "kreise")
     assert const.STATUS_KREIS_FIELDS == (
-        "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "boost",
-        "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz", "abwesend")
+        "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "abwesend", "boost",
+        "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz")
     assert (const.ABWESEND_EVENT, const.ABWESEND_ENDE_EVENT, const.ABWESEND_MAX_TAGE) == (
         "smartheat_abwesend", "smartheat_abwesend_ende", 365)
+    assert (const.ABWESEND_EVENT_SCHEMA, const.ABWESEND_EVENT_FIELDS) == (4, ("schema", "kreis", "bis", "temp"))
+    assert (const.ABWESEND_ENDE_EVENT_SCHEMA, const.ABWESEND_ENDE_EVENT_FIELDS) == (4, ("schema", "kreis"))
+    assert "abwesend_abgelehnt" in const.HINWEIS_KEYS
     assert set(const.KREIS_ZUSTAND_VALUES) >= {"regelt", "abo_inaktiv", "abo_beendet", "testphase", "ausser_betrieb", "heizt_auf"}
     assert const.KAELTESCHUTZ_VALUES == ("aus", "soll", "frost")
 
@@ -43,7 +46,8 @@ def test_meldung_fields_and_keys_follow_the_add_on_wire():
     for falsch in ("raumfuehler:wohnzimmer", "raumfuehler:0123", "sensor.wohnzimmer", "a:0123456789:b", "Abo:0123456789"):
         assert const.MELDUNG_KEY_RE.fullmatch(falsch) is None, falsch
     assert set(const.HINWEIS_KEYS) == {
-        "wunsch_begrenzt", "soll_quelle_aus", "geraet_doppelt", "update_noetig", "gesperrt", "konfiguration_abgelehnt"}
+        "wunsch_begrenzt", "soll_quelle_aus", "geraet_doppelt", "update_noetig", "gesperrt", "konfiguration_abgelehnt",
+        "abwesend_abgelehnt"}
     assert const.hinweis_issue_id("Update-Noetig") == "hinweis_update_noetig"
 
 

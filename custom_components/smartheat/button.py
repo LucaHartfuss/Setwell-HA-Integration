@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ABWESEND_ENDE_EVENT, DOMAIN
+from .const import ABWESEND_ENDE_EVENT, ABWESEND_ENDE_EVENT_FIELDS, DOMAIN
 from .entity import SmartHeatEntity, async_kreis_entities, pruefe_kreis_bereit
 
 KEY = "abwesenheit_beenden"
@@ -40,6 +40,6 @@ class AbwesenheitBeendenTaste(SmartHeatEntity, ButtonEntity):
         pruefe_kreis_bereit(self.coordinator, self._nummer)
         if not isinstance((self.coordinator.kreis(self._nummer) or {}).get("abwesend"), dict):
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="nicht_abwesend")
+        werte = {"schema": self.coordinator.wunsch_schema, "kreis": self._nummer}
         self.hass.bus.async_fire(
-            ABWESEND_ENDE_EVENT, {"schema": self.coordinator.wunsch_schema, "kreis": self._nummer},
-            context=self._context)
+            ABWESEND_ENDE_EVENT, {feld: werte[feld] for feld in ABWESEND_ENDE_EVENT_FIELDS}, context=self._context)

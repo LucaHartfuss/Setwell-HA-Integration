@@ -23,8 +23,8 @@ STATUS_EVENT_FIELDS = (
     "konfig_version", "mindest_integration", "benachrichtigung", "hinweise_aus", "push_regeln", "kreise",
 )
 STATUS_KREIS_FIELDS = (
-    "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "boost",
-    "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz", "abwesend",
+    "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "abwesend",
+    "boost", "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz",
 )
 # Lebenszeichen der Integration an das Add-on (Vertrag V5). Der Kern -- Name, Typ und Bedeutung dieser drei Felder --
 # bleibt in jedem kuenftigen Schema gleich, damit jedes Add-on Version und gelesene Schemata der Integration lesen kann.
@@ -52,7 +52,7 @@ MELDUNG_KEY_RE = re.compile(r"[a-z0-9_]{1,40}|[a-z0-9_]{1,29}:[0-9a-f]{10}")
 MELDUNG_CODE_RE = re.compile(r"[a-z0-9_]{1,40}(?:\.[a-z0-9_]{1,40}){0,2}")
 HINWEIS_SOLL_QUELLE_AUS = "soll_quelle_aus"
 HINWEIS_KEYS = ("update_noetig", "geraet_doppelt", "wunsch_begrenzt", HINWEIS_SOLL_QUELLE_AUS,
-                "konfiguration_abgelehnt", "gesperrt")
+                "konfiguration_abgelehnt", "gesperrt", "abwesend_abgelehnt")
 # Meldungen der Weiche mit eigenem Text je Code (Uebersetzung `issues.<translation_key>`): `update_noetig` nennt in
 # `params.ende` das Datum (ISO), nach dem die urspruenglichen Werte wieder gelten; ohne lesbares Datum und bei
 # `update_noetig_unbekannt` gilt der Text ohne Datum; `update_noetig_mindest` (orange) gilt ohne kritischen Eintrag, also
@@ -172,6 +172,10 @@ RAUM_SOLL_MIN, RAUM_SOLL_MAX, RAUM_SOLL_STEP = 15.0, 25.0, 0.5
 # Temperatur liegt im Bedienbereich des Wunschs (RAUM_SOLL_*). Das Add-on prueft erneut und fuehrt aus.
 ABWESEND_EVENT = "smartheat_abwesend"
 ABWESEND_ENDE_EVENT = "smartheat_abwesend_ende"
+ABWESEND_EVENT_SCHEMA = WUNSCH_EVENT_SCHEMA
+ABWESEND_EVENT_FIELDS = ("schema", "kreis", "bis", "temp")
+ABWESEND_ENDE_EVENT_SCHEMA = WUNSCH_EVENT_SCHEMA
+ABWESEND_ENDE_EVENT_FIELDS = ("schema", "kreis")
 ABWESEND_MAX_TAGE = 365
 # Grenzen der Auswahl im Assistenten: Kopie von heizungsserver einrichtung/ha.py MAX_RAUMFUEHLER,
 # MAX_BATTERIEN, MAX_HANDYS (V3, Contract-Check 76); mehr lehnt der Server mit 400 ab.
