@@ -13,7 +13,7 @@ Fehler der Einrichtungs-API: abgelaufenes Token oder zu alte Bestaetigung (`erne
 Code (Formular `anmelden` mit Hinweis); abgelaufener Code ebenso, abgelehnter Code oder fehlender Nachweis -> Abbruch;
 `portal_bestaetigung` -> Abbruch mit eigenem Text; Feldfehler der Pruefung -> zurueck ins
 Formular mit dem Feld; nicht erreichbar -> Abbruch cannot_connect; alles andere -> Abbruch mit dem Text des Servers.
-Mehr als 8 Raumfuehler, 16 Batterien oder 10 Handys markiert der Assistent selbst (`zu_viele`), ohne Kandidaten fuer
+Mehr als 16 Raumfuehler, 16 Batterien oder 10 Handys markiert der Assistent selbst (`zu_viele`), ohne Kandidaten fuer
 Raumfuehler oder Raum-Soll bricht er ab. Antwortet das Geraet beim "Geraet entfernen" nicht, ist der Eintrag trotzdem
 entfernt. Vom Supervisor wird nie ein Fehlertext gezeigt oder geloggt (er kann Optionswerte zitieren), nur die
 Fehlerart."""

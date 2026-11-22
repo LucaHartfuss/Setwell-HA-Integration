@@ -5,6 +5,7 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 ## Unveröffentlicht
 
+- Die Einrichtung nimmt bis zu 16 Raumfühler je Heizkreis an (bisher 8), passend zur Grenze des Servers.
 - Wird ein Eintrag mit alten Entity-IDs entfernt und die Anlage neu eingerichtet, stellt Home Assistant die alten IDs
   (`sensor.smartheat_<anlage>_status` usw.) beim Anlegen der Entities wieder her. Die Integration benennt sie jetzt schon
   beim ersten Laden auf die festen IDs um, ein zweites Laden ist nicht mehr nötig.

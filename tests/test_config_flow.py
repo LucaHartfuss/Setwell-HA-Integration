@@ -1213,7 +1213,7 @@ async def test_ohne_raumfuehler_kandidaten_bricht_ab(hass, server, feld, bezeich
     assert server.calls[-1] == ("abmelden",)
 
 
-_VIELE = {"raumfuehler": [f"sensor.raum_{i}" for i in range(1, 10)],
+_VIELE = {"raumfuehler": [f"sensor.raum_{i}" for i in range(1, 18)],
           "batterien": [f"sensor.batterie_{i}" for i in range(1, 18)],
           "benachrichtigung": [f"notify.mobile_app_handy_{i}" for i in range(1, 12)]}
 
@@ -1234,8 +1234,8 @@ _ANLAGENWERTE = {"curve": "number.zuhause_circuit_0_heating_curve",
 
 @pytest.mark.parametrize("feld", ["raumfuehler", "batterien", "benachrichtigung"])
 async def test_eine_auswahl_an_der_grenze_wird_angenommen(hass, server, feld):
-    """Gegenprobe: genau 8 Raumfuehler, 16 Batterien, 10 Handys gehen zur Pruefung und zum Server."""
-    grenze = {"raumfuehler": 8, "batterien": 16, "benachrichtigung": 10}[feld]
+    """Gegenprobe: genau 16 Raumfuehler, 16 Batterien, 10 Handys gehen zur Pruefung und zum Server."""
+    grenze = {"raumfuehler": 16, "batterien": 16, "benachrichtigung": 10}[feld]
     _viele_kandidaten(server)
     auswahl = {key: werte[:1] for key, werte in _VIELE.items()} | {feld: _VIELE[feld][:grenze]}
     result = await _configure(hass, await _bis_raeume(hass), {"raumfuehler": auswahl["raumfuehler"],
@@ -1252,8 +1252,8 @@ async def test_eine_auswahl_an_der_grenze_wird_angenommen(hass, server, feld):
     assert len(zaehlt) == grenze
 
 
-async def test_neun_raumfuehler_markieren_das_feld(hass, server):
-    """9 Raumfuehler (Grenze 8) zeigen das Formular `raeume` wieder, Feld `raumfuehler` mit `zu_viele`; die
+async def test_siebzehn_raumfuehler_markieren_das_feld(hass, server):
+    """17 Raumfuehler (Grenze 16) zeigen das Formular `raeume` wieder, Feld `raumfuehler` mit `zu_viele`; die
     Auswahl bleibt vorbelegt, es geht nichts an den Server."""
     _viele_kandidaten(server)
     result = await _bis_raeume(hass)
@@ -1267,7 +1267,7 @@ async def test_neun_raumfuehler_markieren_das_feld(hass, server):
     assert vorbelegt["raumfuehler"] == _VIELE["raumfuehler"]
     assert not any(call[0] in ("pruefen", "einrichten") for call in server.calls)
     # korrigiert: weiter zu den Anlagenwerten, der Fehler ist weg
-    result = await _configure(hass, result, {"raumfuehler": _VIELE["raumfuehler"][:8],
+    result = await _configure(hass, result, {"raumfuehler": _VIELE["raumfuehler"][:16],
                                              "room_target": "climate.wohnzimmer_thermostat"})
     assert result["step_id"] == "anlagenwerte" and not result.get("errors")
 
