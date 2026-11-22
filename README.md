@@ -57,7 +57,7 @@ SmartHeat vollstaendig entfernen: genau in dieser Reihenfolge.
 
 1. Den Eintrag "SmartHeat" unter Einstellungen → Geraete & Dienste loeschen (oder das Geraet im Portal entfernen).
 2. Im Portal abwarten, bis die Anlage "Abgemeldet" zeigt. Dann sind die Ursprungswerte der Heizung wieder gesetzt.
-3. Das Add-on `heizungsbruecke` unter Einstellungen → Add-ons deinstallieren.
+3. Das Add-on `heizungsbruecke` unter Einstellungen → Apps deinstallieren.
 4. Die Integration "SmartHeat" in HACS entfernen.
 
 **Warnung:** Wer zuerst das Add-on deinstalliert oder die Integration entfernt, laesst die Heizung auf den zuletzt
