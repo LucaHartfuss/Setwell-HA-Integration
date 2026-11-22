@@ -149,6 +149,12 @@ STDIN_BEFEHL_ENTFERNEN = "entfernen"
 # (Felder NACHWEIS_EVENT_FIELDS: Schema, eigene Geraete-ID, Unix-Sekunden, Signatur des Geraeteschluessels ueber den festen
 # Pfad der Route `geraetecode`). Kopie von heizungsbruecke/stdin_befehl.py und dem Ereignis des Add-ons (Vertrag V5).
 STDIN_BEFEHL_NACHWEIS = "nachweis"
+# Uebernahme-Code: die Integration schreibt `code <geraet_id>`; das Add-on legt einen neuen Code an und zeigt ihn dann
+# eine Stunde lang in der Discovery (Feld `claim_code`). Der Assistent wartet hoechstens CODE_WAIT_SECONDS darauf.
+# Kopie von heizungsbruecke/stdin_befehl.py (Vertrag V5).
+STDIN_BEFEHL_CODE = "code"
+CODE_WAIT_SECONDS = 30
+CODE_POLL_SECONDS = 1
 STDIN_ZEILE_FORMAT = "{befehl} {geraet_id}\n"
 # Wahl beim Entfernen: `entfernen <geraet_id> freigeben` laesst das Geraet nach der Abmeldung die Freigabe anfragen
 # (es bleibt im Konto, bis der Eigentuemer sie im Portal bestaetigt); ohne den Zusatz fragt es nichts an. Die Option des Eintrags (Vorgabe aus) steuert, ob die Integration ihn anhaengt.

@@ -88,6 +88,8 @@ def test_geraetecode_fields_follow_the_server():
 def test_nachweis_contract_with_the_addon():
     assert (const.STDIN_BEFEHL_NACHWEIS, const.STDIN_BEFEHL_ENTFERNEN) == ("nachweis", "entfernen")
     assert const.STDIN_ZEILE_FORMAT.format(befehl=const.STDIN_BEFEHL_NACHWEIS, geraet_id="shg-a") == "nachweis shg-a\n"
+    assert const.STDIN_BEFEHL_CODE == "code"
+    assert const.STDIN_ZEILE_FORMAT.format(befehl=const.STDIN_BEFEHL_CODE, geraet_id="shg-a") == "code shg-a\n"
     assert const.STDIN_ZUSATZ_FREIGEBEN == "freigeben"
     assert const.STDIN_ZEILE_FORMAT_FREIGEBEN.format(
         befehl=const.STDIN_BEFEHL_ENTFERNEN, geraet_id="shg-a", zusatz=const.STDIN_ZUSATZ_FREIGEBEN) == "entfernen shg-a freigeben\n"

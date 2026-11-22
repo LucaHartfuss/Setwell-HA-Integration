@@ -65,15 +65,17 @@ def _melden(supervisor, config) -> None:
 @pytest.fixture
 def server(monkeypatch, supervisor, hass):
     """Einrichtungs-API an der Grenze `EinrichtungClient(session, base_url)`; der Supervisor meldet die installierte
-    Heizungsbruecke 1.0.0 mit `bootstrap_url` = LABOR_URL und ihre Discovery mit Uebernahme-Code. Das Add-on antwortet
-    auf `nachweis <geraet_id>` mit dem Ereignis `smartheat_nachweis`; `fake.pausen` sammelt die Wartezeiten des Pollings
-    (sie laufen nicht wirklich)."""
+    Heizungsbruecke 1.0.0 mit `bootstrap_url` = LABOR_URL und ihre Discovery ohne Uebernahme-Code. Das Add-on antwortet
+    auf `nachweis <geraet_id>` mit dem Ereignis `smartheat_nachweis` und auf `code <geraet_id>` mit einer Discovery,
+    die `fake.neuer_code` traegt; `fake.pausen` sammelt die Wartezeiten des Pollings (sie laufen nicht wirklich)."""
     fake = FakeServer()
     monkeypatch.setattr(config_flow, "EinrichtungClient", lambda session, base_url, sprache, version: fake.client(base_url, sprache, version))
     supervisor.addon_options[BRIDGE_SLUG] = {"bootstrap_url": LABOR_URL}
-    _melden(supervisor, {"geraet_id": GERAET_ID, "zustand": "nicht_uebernommen", "claim_code": CLAIM_CODE})
+    _melden(supervisor, {"geraet_id": GERAET_ID, "zustand": "nicht_uebernommen"})
     monkeypatch.setattr(config_flow, "POLL_SECONDS", 0)
     fake.pausen = []
+    fake.neuer_code = CLAIM_CODE  # None: das Add-on meldet nach `code <geraet_id>` keinen Code
+    fake.anforderungen = 0
     vorgerueckt = {"s": 0.0}
 
     async def pause(sekunden):
@@ -90,6 +92,13 @@ def server(monkeypatch, supervisor, hass):
         if zeile.startswith(b"nachweis "):
             hass.bus.async_fire(NACHWEIS_EVENT, {"schema": 1, "geraet_id": zeile.split()[1].decode(),
                                                  "zeitstempel": NACHWEIS_ZEITSTEMPEL, "signatur": NACHWEIS_SIGNATUR})
+        elif zeile.startswith(b"code ") and fake.neuer_code is not None:
+            # Das Add-on meldet den neuen Code in einer neuen Discovery (nur auf diese Anforderung); jede weitere
+            # Anforderung ergibt einen anderen Code (Nummer am Ende), wie beim Add-on.
+            fake.anforderungen += 1
+            code = fake.neuer_code if fake.anforderungen == 1 else f"{fake.neuer_code}{fake.anforderungen}"
+            _melden(supervisor, {"geraet_id": zeile.split()[1].decode(), "zustand": "nicht_uebernommen",
+                                 "claim_code": code})
 
     supervisor.stdin_hook = add_on
     return fake
@@ -689,6 +698,7 @@ async def test_already_set_up_device_only_creates_the_entry(hass, server, superv
     assert result["type"] == FlowResultType.CREATE_ENTRY and result["data"]["tenant_id"] == TENANT
     assert not any(call[0] in ("einrichten", "inventur") for call in server.calls)
     assert ("uebernehmen", GERAET_ID, None) in server.calls
+    assert not any(zeile.startswith(b"code ") for slug, zeile in supervisor.stdin)
 
 
 async def test_discovery_of_a_configured_device_aborts(hass, server):
@@ -787,13 +797,56 @@ async def test_claim_without_a_trusted_discovery_of_this_device_aborts(hass, ser
                                    {"geraet_id": GERAET_ID, "zustand": "nicht_uebernommen", "claim_code": "ALTERCODE123"}],
                          ids=["ohne_code", "mit_altem_code"])
 async def test_claim_uses_the_current_discovery_code(hass, server, supervisor, erste):
-    """Die erste Discovery kann `startet` ohne Code sein oder einen alten Code tragen; vor dem Uebernehmen liest der
-    Assistent sie neu und nimmt nur den frischen Code."""
-    _melden(supervisor, {"geraet_id": GERAET_ID, "zustand": "nicht_uebernommen", "claim_code": "NEUERCODE123"})
+    """Die erste Discovery kann `startet` ohne Code sein oder einen alten Code tragen; vor dem Uebernehmen fordert der
+    Assistent einen Code an und nimmt nur den frischen aus der neuen Discovery, auch wenn die laufende Discovery
+    noch einen alten Code (einer frueheren Anforderung) tragt."""
+    server.neuer_code = "NEUERCODE123"
+    _melden(supervisor, {"geraet_id": GERAET_ID, "zustand": "nicht_uebernommen", "claim_code": "ALTERCODE123"})
 
     await _bis_anlage(hass, HassioServiceInfo(config=erste, name="x", slug=BRIDGE_SLUG, uuid="u4"))
 
     assert [call for call in server.calls if call[0] == "uebernehmen"] == [("uebernehmen", GERAET_ID, "NEUERCODE123")]
+
+
+async def test_claim_requests_the_code_from_the_addon_before_taking_over(hass, server, supervisor):
+    """Der Code kommt nur auf Anforderung: `code <geraet_id>` per stdin, einmal, nach dem Nachweis."""
+    await _bis_anlage(hass)
+
+    zeilen = [zeile for slug, zeile in supervisor.stdin]
+    assert zeilen == [f"nachweis {GERAET_ID}\n\n".encode(), f"code {GERAET_ID}\n\n".encode()]
+    assert [call for call in server.calls if call[0] == "uebernehmen"] == [("uebernehmen", GERAET_ID, CLAIM_CODE)]
+
+
+async def test_a_code_that_never_arrives_shows_an_error_in_the_form_without_taking_over(hass, server, supervisor, caplog):
+    """Meldet das Add-on in der Wartezeit keinen neuen Code (alt oder gestoppt), steht ein Fehler im Formular
+    `anmelden` und das Token wird beendet; kein Absturz, kein Code im Log."""
+    caplog.set_level(logging.DEBUG)
+    server.neuer_code = None
+    _melden(supervisor, {"geraet_id": GERAET_ID, "zustand": "nicht_uebernommen", "claim_code": "ALTERCODE123"})
+
+    result = await _bis_anlage(hass)
+
+    assert result["step_id"] == "anmelden" and result["errors"] == {"base": "uebernahme_code_fehlt"}
+    assert not any(call[0] == "uebernehmen" for call in server.calls)
+    assert server.calls[-1] == ("abmelden",)
+    assert "ALTERCODE123" not in caplog.text and CLAIM_CODE not in caplog.text
+    assert sum(server.pausen) >= config_flow.CODE_WAIT_SECONDS
+
+
+async def test_a_refused_code_command_shows_the_same_error_without_waiting(hass, server, supervisor):
+    add_on = supervisor.stdin_hook
+
+    def nach_dem_nachweis_faellt_stdin_aus(slug, zeile):
+        add_on(slug, zeile)
+        if zeile.startswith(b"nachweis "):
+            supervisor.errors["addons.write_addon_stdin"] = SupervisorError("GEHEIM")
+
+    supervisor.stdin_hook = nach_dem_nachweis_faellt_stdin_aus
+
+    result = await _bis_anlage(hass)
+
+    assert result["step_id"] == "anmelden" and result["errors"] == {"base": "uebernahme_code_fehlt"}
+    assert server.pausen == [] or sum(server.pausen) < config_flow.CODE_WAIT_SECONDS
 
 
 @pytest.mark.parametrize("version", ["0.36.0", "0.99.9"])
@@ -1385,9 +1438,9 @@ def _nicht_installiert(supervisor, version: str = "1.0.0") -> None:
 
 async def test_manual_start_installs_the_addon_and_waits_for_discovery(hass, server, supervisor):
     _nicht_installiert(supervisor)
-    mit_code = [discovery_message({"geraet_id": GERAET_ID, "zustand": "nicht_uebernommen", "claim_code": CLAIM_CODE})]
+    _melden(supervisor, {"geraet_id": GERAET_ID, "zustand": "nicht_uebernommen"})
     folge = [[], [discovery_message({"geraet_id": GERAET_ID, "zustand": "startet"})]]
-    supervisor.client.discovery.list.side_effect = lambda: folge.pop(0) if folge else mit_code
+    supervisor.client.discovery.list.side_effect = lambda: folge.pop(0) if folge else list(supervisor.discovery)
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
     result = await _progress(hass, result)
     assert result["step_id"] == "anlage"
@@ -1699,7 +1752,7 @@ _ABORTS = {
 }
 _ERRORS = {
     "uebernahme_gesperrt", "uebernahme_fehlgeschlagen", "anmeldung_gebunden", "cannot_connect", "unknown",
-    "sitzung_abgelaufen", "erneut_anmelden", "code_abgelaufen", "required", "wrong_domain", "entity_not_found", "entity_unavailable", "not_numeric",
+    "sitzung_abgelaufen", "erneut_anmelden", "code_abgelaufen", "uebernahme_code_fehlt", "required", "wrong_domain", "entity_not_found", "entity_unavailable", "not_numeric",
     "unit_mismatch", "out_of_range", "duplicate_entity", "zone_is_room_target", "entity_wrong_integration",
     "entity_wrong_installation", "room_sensors_required", "wrong_state_class", "unknown_service", "unknown_hint",
     "zu_viele", "kreis_nicht_entfernbar", "kreise_anzahl", "nummer_doppelt", "kreis_doppelt", "kreis_1_fehlt",
