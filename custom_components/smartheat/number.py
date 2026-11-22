@@ -22,12 +22,9 @@ from .const import (
     RAUM_SOLL_MAX,
     RAUM_SOLL_MIN,
     RAUM_SOLL_STEP,
-    STATUS_ADDON_FEHLT,
-    STATUS_ADDON_GESTOPPT,
-    STATUS_REAGIERT_NICHT,
     WUNSCH_EVENT,
 )
-from .entity import SmartHeatEntity, async_kreis_entities, endliche_zahl
+from .entity import SmartHeatEntity, async_kreis_entities, endliche_zahl, pruefe_kreis_bereit
 
 KEY = "wunschtemperatur"
 
@@ -41,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         hass, entry, async_add_entities, lambda coordinator, kreis: [WunschtemperaturEntity(coordinator, kreis)])
 
 
-def _auf_schritt(value: float) -> float:
+def auf_schritt(value: float) -> float:
     """Auf den 0,5er-Schritt runden (halbe Schritte aufwaerts, 22,25 -> 22,5), dann in den Bedienbereich."""
     stufe = floor(value / RAUM_SOLL_STEP + 0.5) * RAUM_SOLL_STEP
     return min(max(stufe, RAUM_SOLL_MIN), RAUM_SOLL_MAX)
@@ -56,6 +53,7 @@ class WunschtemperaturEntity(SmartHeatEntity, NumberEntity):
 
     def __init__(self, coordinator, kreis: int) -> None:
         super().__init__(coordinator, "number", KEY, kreis)
+        self._nummer = kreis
 
     def _apply(self) -> None:
         self._attr_native_value = endliche_zahl((self.daten or {}).get("raum_soll"))
@@ -71,18 +69,11 @@ class WunschtemperaturEntity(SmartHeatEntity, NumberEntity):
         gerundete Wert ans Add-on."""
         if not isfinite(value):
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="wunsch_ungueltig")
-        if self.kreis not in self.coordinator.kreise:
-            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="kreis_nicht_gemeldet")
-        if self.coordinator.version_status is not None:
-            raise ServiceValidationError(translation_domain=DOMAIN, translation_key=self.coordinator.version_status)
-        if self.coordinator.watchdog_status == STATUS_ADDON_FEHLT:
-            raise ServiceValidationError(translation_domain=DOMAIN, translation_key=STATUS_ADDON_FEHLT)
-        if self.coordinator.watchdog_status in (STATUS_ADDON_GESTOPPT, STATUS_REAGIERT_NICHT):
-            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="addon_nicht_bereit")
+        pruefe_kreis_bereit(self.coordinator, self._nummer)
         meldungen = (self.coordinator.data or {}).get("meldungen") or []
         if any(isinstance(m, dict) and m.get(MELDUNG_FELD_KEY) == HINWEIS_SOLL_QUELLE_AUS for m in meldungen):
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="thermostat_aus")
-        raum_soll = _auf_schritt(float(value))
+        raum_soll = auf_schritt(float(value))
         # Keine eigene Anzeige des gesetzten Werts: sie folgt dem naechsten Status-Ereignis (das Add-on sendet nur bei
         # einer Aenderung, binnen etwa einer Sekunde), also dem, was das Add-on wirklich anwendet.
         self.hass.bus.async_fire(

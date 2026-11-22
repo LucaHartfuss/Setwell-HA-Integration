@@ -46,6 +46,15 @@ def _ganzzahl(state: str) -> int | None:
         return None
 
 
+def _zurueck_am(daten: dict) -> datetime | None:
+    """Zeitpunkt, zu dem die laufende Abwesenheit endet (`abwesend.bis`); None ohne laufende Abwesenheit, bei einem
+    Wert ohne Zeitzone oder einem Text, der kein Zeitpunkt ist."""
+    abwesend = daten.get("abwesend")
+    bis = abwesend.get("bis") if isinstance(abwesend, dict) else None
+    zeitpunkt = dt_util.parse_datetime(bis) if isinstance(bis, str) else None
+    return zeitpunkt if zeitpunkt is not None and zeitpunkt.tzinfo is not None else None
+
+
 @dataclass(frozen=True, kw_only=True)
 class EventField:
     key: str
@@ -103,6 +112,9 @@ KREIS_FIELDS = (
         key="raumtemperatur", value=lambda d: endliche_zahl(d["raum_ist"]), restore=_number,
         device_class=SensorDeviceClass.TEMPERATURE, unit=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EventField(
+        key="zurueck_am", value=_zurueck_am, restore=dt_util.parse_datetime, device_class=SensorDeviceClass.TIMESTAMP,
     ),
     # Nur die Zahl der Befunde; Art und Einzelheiten stehen bei den Hinweisen der Anlage.
     EventField(

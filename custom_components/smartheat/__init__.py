@@ -9,15 +9,24 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import translation
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
-from . import addon_control, geraete, push, registry_umzug, repairs
+from . import addon_control, geraete, push, registry_umzug, repairs, services
 from .const import DOMAIN, OPTION_GERAET_FREIGEBEN
 from .coordinator import SmartHeatCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Die Dienste der Integration anmelden, einmal fuer alle Eintraege."""
+    services.async_register(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

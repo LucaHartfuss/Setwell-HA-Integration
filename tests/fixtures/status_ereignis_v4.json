@@ -17,6 +17,7 @@
     {
       "abo": "aktiv",
       "abo_frist_ende": null,
+      "abwesend": null,
       "befunde": [],
       "boost": "keiner",
       "einlernphase_tag": null,
@@ -39,6 +40,7 @@
     {
       "abo": "aktiv",
       "abo_frist_ende": null,
+      "abwesend": null,
       "befunde": [],
       "boost": "keiner",
       "einlernphase_tag": null,

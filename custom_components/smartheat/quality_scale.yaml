@@ -4,8 +4,8 @@
 rules:
   # Bronze
   action-setup:
-    status: todo
-    comment: Die Integration registriert noch keine Aktionen; sie entstehen mit Abwesenheit und Wochenplan.
+    status: done
+    comment: Die Aktion smartheat.abwesend_bis wird einmal beim Laden der Integration angemeldet (async_setup), nicht je Eintrag.
   appropriate-polling:
     status: exempt
     comment: Kein Abruf; der Zustand kommt als Ereignis des Add-ons (Push).
@@ -22,9 +22,7 @@ rules:
   dependency-transparency:
     status: exempt
     comment: Keine Bibliothek aus PyPI; requirements im Manifest ist leer.
-  docs-actions:
-    status: todo
-    comment: Wie action-setup; ohne Aktionen nichts zu beschreiben.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -42,6 +40,9 @@ rules:
   action-exceptions:
     status: done
     comment: >-
+      Die Aktion abwesend_bis und die Taste Abwesenheit beenden lehnen eine Eingabe, die nicht ankommen kann, mit einer
+      ServiceValidationError ab (ungültige Zeit oder Temperatur, Gerät kein Heizkreis, Kreis nicht gemeldet, Befund,
+      Add-on nicht bereit, keine Abwesenheit).
       Die Entity der Wunschtemperatur lehnt einen Wunsch, der nicht ankommen kann, mit einer ServiceValidationError ab
       (Kreis nicht gemeldet, Befund, Add-on nicht bereit, Thermostat aus, ungültiger Wert). Das gilt beim direkten Aufruf
       der Entity; ruft jemand den Dienst number.set_value auf, überspringt Home Assistant nicht verfügbare Entities

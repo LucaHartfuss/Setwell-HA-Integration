@@ -36,6 +36,16 @@ Geraet "SmartHeat <Anlage>":
   Hebelsatz); dazu gelernte Steigung und gelernte Heizgrenze.
 - Notbetrieb (Binary-Sensor).
 - **Wunschtemperatur** (`number`): wirkt lokal ueber das Add-on, auch ohne Server.
+- **Abwesend** (Binary-Sensor) und **Zurueck am** (Zeitstempel) je Heizkreis; die Taste **Abwesenheit beenden** beendet
+  eine laufende Abwesenheit.
+
+## Aktionen
+
+`smartheat.abwesend_bis` setzt fuer ein oder mehrere Heizkreise (Ziel: Geraete der Heizkreise) eine Abwesenheit bis zu
+einem Zeitpunkt, optional mit einer Abwesenheitstemperatur von 15 bis 25 °C (auf 0,5 gerundet). Der Zeitpunkt muss in
+der Zukunft liegen und darf hoechstens 365 Tage voraus liegen; ohne Zeitzone gilt die von Home Assistant. Die Aktion
+lehnt mit einer Meldung ab, wenn ein Heizkreis nicht gemeldet wird oder das Add-on nicht bereit ist; dann bekommt
+keiner der Heizkreise des Aufrufs die Abwesenheit. Die Taste beendet die Abwesenheit des Heizkreises, zu dem sie gehoert.
 
 Hinweise des Geraets (z. B. Update noetig, Geraet gesperrt, Einstellung abgelehnt) erscheinen als Reparatur-Hinweise.
 

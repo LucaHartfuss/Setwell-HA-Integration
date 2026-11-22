@@ -30,7 +30,7 @@ def test_lever_entity_keys_are_stable(lever, shift_lever, key):
 def test_vaillant_entry_has_the_circuit_keys_in_their_order():
     """Die Schluessel des Kreises: erst die festen, dann Hebel in LEVER_OPTIONS-Reihenfolge, dann die Lernwerte."""
     assert _keys(VAILLANT) == (
-        "boost", "abo", "zustand", "kaelteschutz", "raumtemperatur", "befunde",
+        "boost", "abo", "zustand", "kaelteschutz", "raumtemperatur", "zurueck_am", "befunde",
         "heizkurve", "parallelverschiebung", "heizgrenze", "mindestvorlauf", "gelernte_steigung", "gelernte_heizgrenze",
     )
     assert [f.key for f in sensor.ANLAGE_FIELDS] == ["datenfehler", "letzte_serverantwort", "addon_version"]

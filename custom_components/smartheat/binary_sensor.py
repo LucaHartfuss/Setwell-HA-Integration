@@ -7,10 +7,11 @@ from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import SmartHeatEntity
+from .entity import SmartHeatEntity, async_kreis_entities
 
 NOTBETRIEB_KEY = "notbetrieb"
 SERVER_VERBUNDEN_KEY = "server_verbunden"
+ABWESEND_KEY = "abwesend"
 ENTITY_KEYS = (NOTBETRIEB_KEY, SERVER_VERBUNDEN_KEY)
 
 
@@ -21,6 +22,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     coordinator = entry.runtime_data
     async_add_entities([NotbetriebSensor(coordinator), ServerVerbundenSensor(coordinator)])
+    async_kreis_entities(hass, entry, async_add_entities, lambda coordinator, kreis: [AbwesendSensor(coordinator, kreis)])
 
 
 class _FeldSensor(SmartHeatEntity, BinarySensorEntity):
@@ -52,3 +54,19 @@ class ServerVerbundenSensor(_FeldSensor):
 
     def __init__(self, coordinator) -> None:
         super().__init__(coordinator, "binary_sensor", SERVER_VERBUNDEN_KEY)
+
+
+class AbwesendSensor(SmartHeatEntity, BinarySensorEntity):
+    """Laeuft fuer diesen Kreis eine Abwesenheit? Das Feld `abwesend` des Kreises ist ein Objekt (laeuft) oder null
+    (keine); fehlt es oder hat es eine andere Form (Add-on ohne Abwesenheit), ist der Zustand unbekannt statt aus."""
+
+    def __init__(self, coordinator, kreis: int) -> None:
+        super().__init__(coordinator, "binary_sensor", ABWESEND_KEY, kreis)
+
+    def _apply(self) -> None:
+        daten = self.daten or {}
+        wert = daten.get(ABWESEND_KEY, "fehlt")
+        self._attr_is_on = True if isinstance(wert, dict) else False if wert is None else None
+
+    def _restore(self, last: State) -> None:
+        self._attr_is_on = last.state == STATE_ON
