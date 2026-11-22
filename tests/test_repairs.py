@@ -430,7 +430,7 @@ async def test_update_noetig_mit_datum_ist_rot_und_nennt_das_datum(hass):
     assert issue.translation_placeholders == {"ende": "2026-12-13"}
     en = await _beschreibung(hass, issue)
     assert "2026-12-13" in en and "{" not in en
-    assert "Add-ons" in en
+    assert "Settings → Apps" in en and "Add-ons" not in en
 
 
 async def test_das_datum_steht_in_deutscher_sprache_als_tag_monat_jahr(hass):
