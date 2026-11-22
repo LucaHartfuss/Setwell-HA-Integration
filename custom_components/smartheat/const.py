@@ -170,6 +170,8 @@ RAUM_SOLL_MIN, RAUM_SOLL_MAX, RAUM_SOLL_STEP = 15.0, 25.0, 0.5
 # Grenzen der Auswahl im Assistenten: Kopie von heizungsserver einrichtung/ha.py MAX_RAUMFUEHLER,
 # MAX_BATTERIEN, MAX_HANDYS (V3, Contract-Check 76); mehr lehnt der Server mit 400 ab.
 EINRICHTUNG_MAX_RAUMFUEHLER = 16
+# Fuehler je Raum: Kopie des Servers (konten/raeume.RAUM_FUEHLER_MAX; Contract-Check).
+EINRICHTUNG_RAUM_FUEHLER_MAX = 3
 EINRICHTUNG_MAX_BATTERIEN = 16
 EINRICHTUNG_MAX_HANDYS = 10
 # Kopie von device_protocol.KREISE_MAX (Heizkreise je Geraet; Contract-Check 76).

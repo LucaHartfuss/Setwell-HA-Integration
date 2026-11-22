@@ -5,7 +5,8 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 ## Unveröffentlicht
 
-- Die Einrichtung nimmt bis zu 16 Raumfühler je Heizkreis an (bisher 8), passend zur Grenze des Servers.
+- Der Server nimmt bis zu 16 Raumfühler je Heizkreis an (bisher 8), höchstens 3 je Raum. Der Einrichtungsassistent bietet
+  zwei Räume je Heizkreis und lehnt mehr als 3 Fühler in einem Raum mit eigener Fehlermeldung ab.
 - Wird ein Eintrag mit alten Entity-IDs entfernt und die Anlage neu eingerichtet, stellt Home Assistant die alten IDs
   (`sensor.smartheat_<anlage>_status` usw.) beim Anlegen der Entities wieder her. Die Integration benennt sie jetzt schon
   beim ersten Laden auf die festen IDs um, ein zweites Laden ist nicht mehr nötig.

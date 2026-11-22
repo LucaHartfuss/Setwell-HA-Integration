@@ -202,7 +202,8 @@
       "abo_nicht_verbindbar": "Das Abo ließ sich nicht mit dem Heizkreis verbinden.",
       "name": "Bitte dem Raum einen Namen geben (bis 40 Zeichen).",
       "soll_quelle": "Genau ein Raum muss die Wunschtemperatur liefern.",
-      "fuehler_zahl": "Bitte ein bis acht Raumfühler je Heizkreis wählen.",
+      "fuehler_zahl": "Bitte 1 bis 16 Raumfühler je Heizkreis wählen, höchstens 3 je Raum.",
+      "raum_fuehler_zahl": "Bitte höchstens 3 Raumfühler je Raum wählen.",
       "fuehler_form": "Ein Raumfühler-Eintrag ist ungültig.",
       "keine_raeume": "Mindestens ein Raum ist erforderlich."
     },

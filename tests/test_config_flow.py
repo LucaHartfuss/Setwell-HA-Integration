@@ -1234,8 +1234,8 @@ _ANLAGENWERTE = {"curve": "number.zuhause_circuit_0_heating_curve",
 
 @pytest.mark.parametrize("feld", ["raumfuehler", "batterien", "benachrichtigung"])
 async def test_eine_auswahl_an_der_grenze_wird_angenommen(hass, server, feld):
-    """Gegenprobe: genau 16 Raumfuehler, 16 Batterien, 10 Handys gehen zur Pruefung und zum Server."""
-    grenze = {"raumfuehler": 16, "batterien": 16, "benachrichtigung": 10}[feld]
+    """Gegenprobe: genau 3 Raumfuehler im Raum, 16 Batterien, 10 Handys gehen zur Pruefung und zum Server."""
+    grenze = {"raumfuehler": 3, "batterien": 16, "benachrichtigung": 10}[feld]
     _viele_kandidaten(server)
     auswahl = {key: werte[:1] for key, werte in _VIELE.items()} | {feld: _VIELE[feld][:grenze]}
     result = await _configure(hass, await _bis_raeume(hass), {"raumfuehler": auswahl["raumfuehler"],
@@ -1252,23 +1252,42 @@ async def test_eine_auswahl_an_der_grenze_wird_angenommen(hass, server, feld):
     assert len(zaehlt) == grenze
 
 
-async def test_siebzehn_raumfuehler_markieren_das_feld(hass, server):
-    """17 Raumfuehler (Grenze 16) zeigen das Formular `raeume` wieder, Feld `raumfuehler` mit `zu_viele`; die
-    Auswahl bleibt vorbelegt, es geht nichts an den Server."""
+@pytest.mark.parametrize("zahl", [4, 16, 17])
+async def test_mehr_als_drei_raumfuehler_im_raum_markieren_das_feld(hass, server, zahl):
+    """Mehr als 3 Raumfuehler in einem Raum zeigen das Formular `raeume` wieder, Feld `raumfuehler` mit
+    `raum_fuehler_zahl`; die Auswahl bleibt vorbelegt, es geht nichts an den Server."""
+    _viele_kandidaten(server)
+    result = await _bis_raeume(hass)
+    auswahl = _VIELE["raumfuehler"][:zahl]
+
+    result = await _configure(hass, result, {"raumfuehler": auswahl, "room_target": "climate.wohnzimmer_thermostat"})
+
+    assert (result["type"], result["step_id"]) == (FlowResultType.FORM, "raeume")
+    assert result["errors"] == {"raumfuehler": "raum_fuehler_zahl"}
+    vorbelegt = {str(key): key.default() for key in result["data_schema"].schema if key.default is not vol.UNDEFINED}
+    assert vorbelegt["raumfuehler"] == auswahl
+    assert not any(call[0] in ("pruefen", "einrichten") for call in server.calls)
+    # korrigiert: weiter zu den Anlagenwerten, der Fehler ist weg
+    result = await _configure(hass, result, {"raumfuehler": _VIELE["raumfuehler"][:3],
+                                             "room_target": "climate.wohnzimmer_thermostat"})
+    assert result["step_id"] == "anlagenwerte" and not result.get("errors")
+
+
+async def test_mehr_als_drei_fuehler_im_zweiten_raum_markieren_dessen_feld(hass, server):
+    """Der zweite Raum (Kontrollraum) hat dieselbe Grenze: der Fehler steht an `kontroll_fuehler`."""
     _viele_kandidaten(server)
     result = await _bis_raeume(hass)
 
-    result = await _configure(hass, result, {"raumfuehler": _VIELE["raumfuehler"],
-                                             "room_target": "climate.wohnzimmer_thermostat"})
+    result = await _configure(hass, result, {
+        "raumfuehler": _VIELE["raumfuehler"][:3], "room_target": "climate.wohnzimmer_thermostat",
+        "kontroll_name": "Schlafzimmer", "kontroll_fuehler": _VIELE["raumfuehler"][3:7]})
 
     assert (result["type"], result["step_id"]) == (FlowResultType.FORM, "raeume")
-    assert result["errors"] == {"raumfuehler": "zu_viele"}
-    vorbelegt = {str(key): key.default() for key in result["data_schema"].schema if key.default is not vol.UNDEFINED}
-    assert vorbelegt["raumfuehler"] == _VIELE["raumfuehler"]
+    assert result["errors"] == {"kontroll_fuehler": "raum_fuehler_zahl"}
     assert not any(call[0] in ("pruefen", "einrichten") for call in server.calls)
-    # korrigiert: weiter zu den Anlagenwerten, der Fehler ist weg
-    result = await _configure(hass, result, {"raumfuehler": _VIELE["raumfuehler"][:16],
-                                             "room_target": "climate.wohnzimmer_thermostat"})
+    result = await _configure(hass, result, {
+        "raumfuehler": _VIELE["raumfuehler"][:3], "room_target": "climate.wohnzimmer_thermostat",
+        "kontroll_name": "Schlafzimmer", "kontroll_fuehler": _VIELE["raumfuehler"][3:6]})
     assert result["step_id"] == "anlagenwerte" and not result.get("errors")
 
 
@@ -1311,7 +1330,7 @@ async def test_die_grenzen_gelten_auch_unmittelbar_vor_der_pruefung(hass, server
     result = await _configure(hass, result, {"benachrichtigung": [], "hinweise_aus": []})
 
     assert (result["type"], result["step_id"]) == (FlowResultType.FORM, "raeume")
-    assert result["errors"] == {"raumfuehler": "zu_viele"}
+    assert result["errors"] == {"raumfuehler": "raum_fuehler_zahl"}
     assert not any(call[0] == "pruefen" for call in server.calls)
 
 
@@ -1704,7 +1723,7 @@ _ERRORS = {
     "entity_wrong_installation", "room_sensors_required", "wrong_state_class", "unknown_service", "unknown_hint",
     "zu_viele", "kreis_nicht_entfernbar", "kreise_anzahl", "nummer_doppelt", "kreis_doppelt", "kreis_1_fehlt",
     "weg_gemischt", "abo_doppelt", "kreis_belegt", "abo_unbekannt", "abo_nicht_verbindbar", "name", "soll_quelle",
-    "fuehler_zahl", "fuehler_form", "keine_raeume",
+    "fuehler_zahl", "fuehler_form", "keine_raeume", "raum_fuehler_zahl",
 }
 _STEPS = {"bestaetigen", "anmelden", "schon_eingerichtet", "anlage", "ersetzen", "inventur_zeit", "integration",
           "system", "hebelsatz", "abo", "raeume", "anlagenwerte", "benachrichtigung", "zusammenfassung", "menue",
