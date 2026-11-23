@@ -37,6 +37,7 @@ from .const import (
     MELDUNG_UPDATE_NOETIG_UNBEKANNT,
     MELDUNG_UPDATES_VERALTET,
     MINDEST_INTEGRATION_RE,
+    NEUE_IDENTITAET_ISSUE_ID,
     STATUS_ADDON_MEHRFACH,
     STATUS_INTEGRATION_VERALTET,
     STATUS_VERSION_VALUES,
@@ -193,6 +194,19 @@ def async_set_auto_update(hass: HomeAssistant, auto_update: bool | None) -> None
     )
 
 
+def async_set_neue_identitaet(hass: HomeAssistant, aktiv: bool) -> None:
+    """Das Repair "Geraet neu einrichten" setzen oder nehmen: das Geraet hat seine Identitaet gewechselt (der Server hat
+    es freigegeben), der Eintrag mit der alten ID bleibt ohne Ereignisse. Nicht behebbar, Warnung; der Kunde richtet das
+    Geraet ueber die Einrichtung neu ein und entfernt den alten Eintrag. Der Text steht nur in den Uebersetzungen."""
+    if not aktiv:
+        ir.async_delete_issue(hass, DOMAIN, NEUE_IDENTITAET_ISSUE_ID)
+        return
+    ir.async_create_issue(
+        hass, DOMAIN, NEUE_IDENTITAET_ISSUE_ID, is_fixable=False, severity=ir.IssueSeverity.WARNING,
+        translation_key=NEUE_IDENTITAET_ISSUE_ID,
+    )
+
+
 def async_clear(hass: HomeAssistant, *, ignoriertes_auto_update_behalten: bool = False) -> None:
     """Alle eigenen Repairs nehmen. Beim Entladen (`ignoriertes_auto_update_behalten`) bleibt ein vom Kunden
     ignoriertes Repair "automatische Updates aus" in der Registry: ein Loeschen vergaesse das Ignorieren, und der
@@ -201,6 +215,7 @@ def async_clear(hass: HomeAssistant, *, ignoriertes_auto_update_behalten: bool =
     async_update(hass, [])
     async_set_version(hass, None)
     async_set_watchdog(hass, None)
+    async_set_neue_identitaet(hass, False)
     issue = ir.async_get(hass).async_get_issue(DOMAIN, AUTO_UPDATE_ISSUE_ID)
     if not (ignoriertes_auto_update_behalten and issue is not None and issue.dismissed_version is not None):
         ir.async_delete_issue(hass, DOMAIN, AUTO_UPDATE_ISSUE_ID)
