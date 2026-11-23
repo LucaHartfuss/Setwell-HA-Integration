@@ -56,3 +56,7 @@ _.ausstehend  # Anzahl der Befunde, deren Meldung noch aussteht
 
 # Plattformen (sensor.py, binary_sensor.py, number.py): HA liest PARALLEL_UPDATES je Plattformmodul.
 PARALLEL_UPDATES  # HA-Hook: Begrenzung gleichzeitiger Aufrufe je Plattform
+
+# const.py: Kopie der Servergrenze je Kreis; der Assistent erreicht sie mit zwei Raeumen zu je 3 Fuehlern nie, der
+# Contract-Check pinnt sie gegen den Server.
+EINRICHTUNG_MAX_RAUMFUEHLER  # nur Contract-Check gegen die Grenze des Servers
