@@ -1538,3 +1538,24 @@ async def test_a_high_schema_event_ends_a_silence_incident(hass, supervisor, clo
     await hass.async_block_till_done()
 
     assert entry.runtime_data.watchdog_status is None
+
+
+async def test_a_waiting_device_with_another_id_asks_to_set_up_the_device_again(hass, clock):
+    """Hat das Add-on seine Identitaet gewechselt, meldet es sich mit neuer ID als noch nicht eingerichtet: der Eintrag
+    mit der alten ID zeigt den Hinweis. Ein fremdes Ereignis in einem anderen Zustand tut das nicht."""
+    entry = await _setup(hass)
+    event = status_event(TENANT, "startet", geraet_zustand="wartet_auf_einrichtung", kreise=[])
+    registry = ir.async_get(hass)
+
+    _fire(hass, {**event, "geraet_id": "shg-b", "geraet_zustand": "regelt"})
+    await hass.async_block_till_done()
+    assert registry.async_get_issue(DOMAIN, "neue_identitaet") is None
+
+    _fire(hass, {**event, "geraet_id": "shg-b"})
+    await hass.async_block_till_done()
+    assert registry.async_get_issue(DOMAIN, "neue_identitaet") is not None
+    assert entry.runtime_data.data is None  # das fremde Ereignis aendert den Zustand des Eintrags nicht
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert registry.async_get_issue(DOMAIN, "neue_identitaet") is None
