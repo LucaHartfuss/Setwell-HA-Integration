@@ -26,7 +26,7 @@ from .const import (
     BRUECKE_GEFUNDEN,
     BRUECKE_MEHRFACH,
     EINRICHTUNG_MAX_KREISE,
-    GERAET_ZUSTAND_WARTET,
+    GERAET_ZUSTAND_NICHT_UEBERNOMMEN,
     INTEGRATION_EVENT,
     INTEGRATION_EVENT_FIELDS,
     INTEGRATION_EVENT_SCHEMA,
@@ -334,8 +334,8 @@ class SmartHeatCoordinator:
         Ereignis zieht auch den Geraetebaum nach (Anlage, Kreise)."""
         data = event.data
         if data.get("geraet_id") != self.geraet_id:
-            if data.get("geraet_zustand") == GERAET_ZUSTAND_WARTET:
-                # Ein Geraet mit anderer ID wartet auf die Einrichtung: das eigene hat seine Identitaet gewechselt.
+            if data.get("geraet_zustand") == GERAET_ZUSTAND_NICHT_UEBERNOMMEN:
+                # Ein Geraet mit anderer ID ist noch nicht uebernommen: das eigene hat seine Identitaet gewechselt.
                 repairs.async_set_neue_identitaet(self.hass, True)
             return
         repairs.async_set_neue_identitaet(self.hass, False)  # das eigene Geraet lebt noch unter dieser ID

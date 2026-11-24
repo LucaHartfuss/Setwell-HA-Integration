@@ -519,7 +519,7 @@ async def test_an_event_without_circuits_yet_creates_no_circuit_entities(hass, c
     wenn ein Kreis gemeldet wird."""
     entry = await _setup(hass)
 
-    _fire(hass, status_event(None, "startet", geraet_zustand="wartet_auf_einrichtung", kreise=[]))
+    _fire(hass, status_event(None, "startet", geraet_zustand="nicht_uebernommen", kreise=[]))
     await hass.async_block_till_done()
 
     assert entry.runtime_data.kreis(1) is None
@@ -548,11 +548,11 @@ async def test_event_of_an_unconfigured_device_is_taken_by_its_id(hass, clock):
     reicht; den Geraetezustand traegt geraet_zustand."""
     entry = await _setup(hass)
 
-    _fire(hass, status_event(None, "startet", geraet_zustand="wartet_auf_einrichtung"))
+    _fire(hass, status_event(None, "startet", geraet_zustand="nicht_uebernommen"))
     await hass.async_block_till_done()
 
     assert hass.states.get(STATUS).state == "startet"
-    assert entry.runtime_data.data["geraet_zustand"] == "wartet_auf_einrichtung"
+    assert entry.runtime_data.data["geraet_zustand"] == "nicht_uebernommen"
 
 
 async def test_entities_restore_the_last_state_after_a_restart(hass, clock):
@@ -1384,7 +1384,7 @@ async def test_a_startet_status_of_the_own_device_gets_an_answering_integration_
     await hass.async_block_till_done()
     assert events == []
 
-    _fire(hass, status_event(None, "startet", geraet_zustand="wartet_auf_einrichtung"))
+    _fire(hass, status_event(None, "startet", geraet_zustand="nicht_uebernommen"))
     _fire(hass, status_event(TENANT, "startet", geraet_id="shg-b"))  # fremdes Geraet: keine Antwort
     await hass.async_block_till_done()
     assert len(events) == 1
@@ -1541,10 +1541,11 @@ async def test_a_high_schema_event_ends_a_silence_incident(hass, supervisor, clo
 
 
 async def test_a_waiting_device_with_another_id_asks_to_set_up_the_device_again(hass, clock):
-    """Hat das Add-on seine Identitaet gewechselt, meldet es sich mit neuer ID als noch nicht eingerichtet: der Eintrag
+    """Hat das Add-on seine Identitaet gewechselt, loescht es sein Bootstrap und meldet sich mit neuer ID als
+    `nicht_uebernommen` (der Wert, den die Registrierung antwortet): der Eintrag
     mit der alten ID zeigt den Hinweis. Ein fremdes Ereignis in einem anderen Zustand tut das nicht."""
     entry = await _setup(hass)
-    event = status_event(TENANT, "startet", geraet_zustand="wartet_auf_einrichtung", kreise=[])
+    event = status_event(TENANT, "startet", geraet_zustand="nicht_uebernommen", kreise=[])
     registry = ir.async_get(hass)
 
     _fire(hass, {**event, "geraet_id": "shg-b", "geraet_zustand": "regelt"})

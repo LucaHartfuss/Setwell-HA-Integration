@@ -313,9 +313,9 @@ WATCHDOG_ISSUE_ID = "waechter"
 # Hinweis, dass der Kunde die automatischen Updates des Add-ons ausgeschaltet hat (Text nur in den Uebersetzungen).
 AUTO_UPDATE_ISSUE_ID = "auto_update_aus"
 # Hinweis, dass das Geraet seine Identitaet gewechselt hat und neu eingerichtet werden muss (Text nur in den
-# Uebersetzungen). Das Add-on meldet sich dann mit neuer ID und dem Zustand `wartet_auf_einrichtung`.
+# Uebersetzungen). Das Add-on meldet sich dann mit neuer ID und dem Zustand `nicht_uebernommen`.
 NEUE_IDENTITAET_ISSUE_ID = "neue_identitaet"
-GERAET_ZUSTAND_WARTET = "wartet_auf_einrichtung"
+GERAET_ZUSTAND_NICHT_UEBERNOMMEN = "nicht_uebernommen"
 
 # Push auf die Handys des Kunden. Der Store haelt Tageszaehler, aufgeschobene und offene Meldungen, nie Ziele.
 PUSH_STORE_KEY = "smartheat.push"
