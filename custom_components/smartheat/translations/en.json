@@ -203,7 +203,8 @@
       "abo_nicht_verbindbar": "The subscription could not be connected to the heating circuit.",
       "name": "Please give the room a name (up to 40 characters).",
       "soll_quelle": "Exactly one room must provide the desired temperature.",
-      "fuehler_zahl": "Select one to eight room sensors per heating circuit.",
+      "fuehler_zahl": "Select 1 to 16 room sensors per heating circuit, at most 3 per room.",
+      "raum_fuehler_zahl": "Select at most 3 room sensors per room.",
       "fuehler_form": "A room sensor entry is invalid.",
       "keine_raeume": "At least one room is required."
     },

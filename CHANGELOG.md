@@ -7,7 +7,17 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 
 - Der Übernahme-Code erscheint erst, wenn die Einrichtung ihn anfordert, und gilt eine Stunde; nach einem Neustart gibt
   es einen neuen Code.
+- Abwesenheit: Die Aktion `smartheat.abwesend_bis` (Ziel: Geräte der Heizkreise; Zeitpunkt in der Zukunft, höchstens
+  365 Tage voraus; optional eine Temperatur von 15 bis 25 °C) und die Taste `abwesenheit_beenden` je Heizkreis geben
+  die Abwesenheit lokal an das Add-on; dazu je Heizkreis der Binary-Sensor `abwesend` und der Zeitstempel `zurueck_am`.
+  Die Rückkehrzeit steht nie im Log. Das Add-on muss die Abwesenheit im Status-Ereignis melden (Feld `abwesend`).
 
+## 2.0.0
+
+Teil des Releases Setwell 0.0.1. Der Server muss vorher auf 0.0.1 stehen.
+
+- Der Server nimmt bis zu 16 Raumfühler je Heizkreis an (bisher 8), höchstens 3 je Raum. Der Einrichtungsassistent bietet
+  zwei Räume je Heizkreis und lehnt mehr als 3 Fühler in einem Raum mit eigener Fehlermeldung ab.
 - Wird ein Eintrag mit alten Entity-IDs entfernt und die Anlage neu eingerichtet, stellt Home Assistant die alten IDs
   (`sensor.smartheat_<anlage>_status` usw.) beim Anlegen der Entities wieder her. Die Integration benennt sie jetzt schon
   beim ersten Laden auf die festen IDs um, ein zweites Laden ist nicht mehr nötig.
@@ -40,10 +50,6 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 - Neue Option am Eintrag „Gerät zusätzlich aus dem Konto lösen“ (Vorgabe aus). Ist sie gesetzt, schreibt das Löschen des
   Eintrags `entfernen <Geräte-ID> freigeben` an das Add-on, und das Gerät verlässt nach der lokalen Abmeldung das Konto
   (das Add-on meldet es dem Server). Ohne die Option bleibt es im Konto und lässt sich im Portal entfernen.
-- Abwesenheit: Die Aktion `smartheat.abwesend_bis` (Ziel: Geräte der Heizkreise; Zeitpunkt in der Zukunft, höchstens
-  365 Tage voraus; optional eine Temperatur von 15 bis 25 °C) und die Taste `abwesenheit_beenden` je Heizkreis geben
-  die Abwesenheit lokal an das Add-on; dazu je Heizkreis der Binary-Sensor `abwesend` und der Zeitstempel `zurueck_am`.
-  Die Rückkehrzeit steht nie im Log. Das Add-on muss die Abwesenheit im Status-Ereignis melden (Feld `abwesend`).
 - Mindestversion der Integration: Nennt das Add-on in seinem Ereignis eine `mindest_integration`, die über der
   eigenen Version liegt (verglichen werden die drei Zahlen), zeigt die Integration `integration_veraltet` mit
   Reparatur-Hinweis und der Mindestversion. Gleichstand, eine niedrigere, fehlende oder unlesbare Angabe ergeben nie
