@@ -16,7 +16,6 @@ concurrency:
   cancel-in-progress: false
 env:
   KIND: integration
-  SELF: SmartHeat-Integration
 jobs:
   ci:
     # Volle Stufe wie in allen Repos (hier dieselben Jobs wie im Push-Lauf).
@@ -52,7 +51,8 @@ jobs:
       - name: tools/ aus dem Root-Repo holen
         env:
           CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
-        run: bash scripts/ci/siblings.sh "$RUNNER_TEMP/dev" "$SELF" "$GITHUB_WORKSPACE" "$GITHUB_REF_NAME"
+          KERN_REPO: LucaHartfuss/HomeAssistant_Dev_Root
+        run: bash scripts/ci/siblings.sh "$RUNNER_TEMP/dev" "$GITHUB_REPOSITORY" "$GITHUB_WORKSPACE" "$GITHUB_REF_NAME"
       # release_gate.py braucht nur PyYAML, installiert aus dem Hash-Lock.
       - run: pip install --require-hashes --no-deps -r "$DEV_ROOT/tools/release/requirements.txt"
       - name: Freigabe pruefen
