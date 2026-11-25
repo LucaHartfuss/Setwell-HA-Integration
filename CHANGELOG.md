@@ -8,6 +8,12 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
 - Der Übernahme-Code erscheint erst, wenn die Einrichtung ihn anfordert, und gilt eine Stunde; nach einem Neustart gibt
   es einen neuen Code.
 
+## 2.0.0
+
+Teil des Releases Setwell 0.0.1. Der Server muss vorher auf 0.0.1 stehen.
+
+- Der Server nimmt bis zu 16 Raumfühler je Heizkreis an (bisher 8), höchstens 3 je Raum. Der Einrichtungsassistent bietet
+  zwei Räume je Heizkreis und lehnt mehr als 3 Fühler in einem Raum mit eigener Fehlermeldung ab.
 - Wird ein Eintrag mit alten Entity-IDs entfernt und die Anlage neu eingerichtet, stellt Home Assistant die alten IDs
   (`sensor.smartheat_<anlage>_status` usw.) beim Anlegen der Entities wieder her. Die Integration benennt sie jetzt schon
   beim ersten Laden auf die festen IDs um, ein zweites Laden ist nicht mehr nötig.

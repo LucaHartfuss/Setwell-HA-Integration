@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prueft die SSH-Signatur eines Release-Tags (zweite Linie neben dem Tag-Ruleset mit Pflicht-Signatur, AP-04).
+# Prueft die SSH-Signatur eines Release-Tags (AP-04; das Tag-Ruleset prueft sie nicht, Probe AP-04-H1-Probe).
 # Kanonisch in HomeAssistant_Dev_Root/tools/release/tag_pruefen.sh; identische Kopien in den oeffentlichen Repos
 # (Add-on, Integration) unter scripts/ci/tag_pruefen.sh (Root-check.sh Schritt "copies" prueft das). Die privaten Repos
 # pruefen keine Tag-Signatur (kein Ruleset im Free-Tarif).

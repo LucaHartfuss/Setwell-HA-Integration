@@ -13,7 +13,9 @@ Fehler der Einrichtungs-API: abgelaufenes Token oder zu alte Bestaetigung (`erne
 Code (Formular `anmelden` mit Hinweis); abgelaufener Code ebenso, abgelehnter Code oder fehlender Nachweis -> Abbruch;
 `portal_bestaetigung` -> Abbruch mit eigenem Text; Feldfehler der Pruefung -> zurueck ins
 Formular mit dem Feld; nicht erreichbar -> Abbruch cannot_connect; alles andere -> Abbruch mit dem Text des Servers.
-Mehr als 8 Raumfuehler, 16 Batterien oder 10 Handys markiert der Assistent selbst (`zu_viele`), ohne Kandidaten fuer
+Der Server nimmt je Kreis bis 16 Raumfuehler an, je Raum hoechstens 3; der Assistent bietet zwei Raeume je Kreis und
+markiert mehr als 3 Fuehler in einem Raum selbst (`raum_fuehler_zahl`). Ebenso markiert er mehr als 16 Batterien oder
+10 Handys (`zu_viele`); ohne Kandidaten fuer
 Raumfuehler oder Raum-Soll bricht er ab. Antwortet das Geraet beim "Geraet entfernen" nicht, ist der Eintrag trotzdem
 entfernt. Vom Supervisor wird nie ein Fehlertext gezeigt oder geloggt (er kann Optionswerte zitieren), nur die
 Fehlerart."""
@@ -60,7 +62,7 @@ from .const import (
     EINRICHTUNG_MAX_BATTERIEN,
     EINRICHTUNG_MAX_HANDYS,
     EINRICHTUNG_MAX_KREISE,
-    EINRICHTUNG_MAX_RAUMFUEHLER,
+    EINRICHTUNG_RAUM_FUEHLER_MAX,
     EINRICHTUNG_RAUMFUEHLER_FELDER,
     EINRICHTUNG_VORSCHLAG_AUSWAHL_FELDER,
     EINRICHTUNG_VORSCHLAG_HEBELSATZ_FELDER,
@@ -117,6 +119,13 @@ _MAXIMUM = {"batterien": EINRICHTUNG_MAX_BATTERIEN, "benachrichtigung": EINRICHT
 def _fk(nummer: int, feld: str) -> str:
     """Fehlerschluessel des Servers: Kreis 1 mit dem Feldnamen, ein weiterer Kreis mit `k<Nummer>.` davor."""
     return feld if nummer == 1 else f"k{nummer}.{feld}"
+
+
+def _fuehler_fehler(eingaben: dict) -> dict[str, str]:
+    """Feldfehler der Raumfuehler eines Kreises: mehr als 3 in einem Raum (`raum_fuehler_zahl` am Feld dieses Raums).
+    Die 16 je Kreis (Grenze des Servers) erreicht der Assistent mit seinen zwei Raeumen nie."""
+    return {feld: "raum_fuehler_zahl" for feld in ("raumfuehler", "kontroll_fuehler")
+            if len(eingaben.get(feld) or []) > EINRICHTUNG_RAUM_FUEHLER_MAX}
 
 
 _INVENTUR_FERTIG = "fertig"
@@ -849,9 +858,7 @@ class SmartHeatConfigFlow(ProgressFlowMixin, ConfigFlow, domain=DOMAIN):
         kreis = self._aktuell()
         e, nummer = kreis["eingaben"], kreis["nummer"]
         neu: dict[str, str] = {}
-        fuehler = [*(e.get("raumfuehler") or []), *(e.get("kontroll_fuehler") or [])]
-        if len(fuehler) > EINRICHTUNG_MAX_RAUMFUEHLER:
-            neu["raumfuehler"] = "zu_viele"
+        neu.update(_fuehler_fehler(e))
         if e.get("kontroll_fuehler") and not e.get("kontroll_name"):
             neu["kontroll_name"] = "required"
         if e.get("kontroll_name") and not e.get("kontroll_fuehler"):
@@ -942,8 +949,7 @@ class SmartHeatConfigFlow(ProgressFlowMixin, ConfigFlow, domain=DOMAIN):
                   if len(self._eingaben.get(feld) or []) > maximum}
         for kreis in self._dabei():
             e = kreis["eingaben"]
-            if len([*(e.get("raumfuehler") or []), *(e.get("kontroll_fuehler") or [])]) > EINRICHTUNG_MAX_RAUMFUEHLER:
-                fehler[_fk(kreis["nummer"], "raumfuehler")] = "zu_viele"
+            fehler |= {_fk(kreis["nummer"], feld): code for feld, code in _fuehler_fehler(e).items()}
         return fehler
 
     def _grenzen_verletzt(self, felder: tuple[str, ...]) -> bool:
