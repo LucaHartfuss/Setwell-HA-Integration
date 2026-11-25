@@ -3,6 +3,11 @@
 HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version ein Abschnitt
 `## X.Y.Z`.
 
+## 2.0.1
+
+Wartungsrelease ohne Änderung an der Integration: nur die CI-Dateien des Repos (Lese-Token für das Kern-Repo) ziehen auf
+`main` nach. Kein Funktionsunterschied zu 2.0.0.
+
 ## 2.0.0
 
 Teil des Releases Setwell 0.0.1. Der Server muss vorher auf 0.0.1 stehen.
