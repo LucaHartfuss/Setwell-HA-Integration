@@ -35,6 +35,7 @@ ERFUELLT = {
     "common-modules", "entity-unique-id", "has-entity-name", "runtime-data", "test-before-configure",
     "unique-config-entry", "action-exceptions", "config-entry-unloading", "entity-unavailable", "integration-owner",
     "log-when-unavailable", "parallel-updates", "test-coverage", "devices", "diagnostics", "icon-translations",
+    "action-setup", "docs-actions",
 }
 
 
@@ -73,7 +74,7 @@ def test_zugesagte_regeln_sind_erfuellt_oder_ausgenommen():
     assert not offen
 
 
-@pytest.mark.parametrize("modul", ["sensor", "binary_sensor", "number"])
+@pytest.mark.parametrize("modul", ["sensor", "binary_sensor", "button", "number"])
 def test_parallel_updates_je_plattform(modul):
     """Die Entities lesen nur den Zustand des Coordinators (Push) und feuern hoechstens ein lokales Ereignis: keine
     Begrenzung noetig, aber ausdruecklich gesetzt."""

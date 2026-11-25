@@ -9,12 +9,13 @@ from math import isfinite
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import entity_id, unique_id
+from .const import DOMAIN, STATUS_ADDON_FEHLT, STATUS_ADDON_GESTOPPT, STATUS_REAGIERT_NICHT, entity_id, unique_id
 from .coordinator import SmartHeatCoordinator
 from .geraete import anlage_kennung, kreis_kennung, registrierte_kreise
 
@@ -29,6 +30,20 @@ def endliche_zahl(value) -> float | None:
     except OverflowError:
         return None
     return number if isfinite(number) else None
+
+
+def pruefe_kreis_bereit(coordinator: SmartHeatCoordinator, kreis: int) -> None:
+    """Lehnt mit einem Code der Uebersetzungen ab, wenn ein Befehl an das Add-on ins Leere ginge: der Kreis wird nicht
+    gemeldet, Add-on und Integration sprechen kein gemeinsames Schema, das Add-on fehlt oder ist gestoppt bzw. reagiert
+    nicht. Die Reihenfolge ist Teil des Verhaltens (erster Befund gewinnt)."""
+    if kreis not in coordinator.kreise:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="kreis_nicht_gemeldet")
+    if coordinator.version_status is not None:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key=coordinator.version_status)
+    if coordinator.watchdog_status == STATUS_ADDON_FEHLT:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key=STATUS_ADDON_FEHLT)
+    if coordinator.watchdog_status in (STATUS_ADDON_GESTOPPT, STATUS_REAGIERT_NICHT):
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="addon_nicht_bereit")
 
 
 class SmartHeatEntity(RestoreEntity):

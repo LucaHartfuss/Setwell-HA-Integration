@@ -137,6 +137,12 @@ def test_meldung_without_code_is_a_warning_with_empty_text(hass):
         ir.IssueSeverity.WARNING, "soll_quelle_aus", {"text": ""})
 
 
+def test_der_hinweis_abwesend_abgelehnt_hat_einen_eigenen_text_mit_dem_grund_als_code(hass):
+    repairs.async_update(hass, [_meldung("abwesend_abgelehnt", "orange", code="meldung.abwesend_abgelehnt")])
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, "hinweis_abwesend_abgelehnt")
+    assert (issue.severity, issue.translation_key) == (ir.IssueSeverity.WARNING, "abwesend_abgelehnt")
+
+
 @pytest.mark.parametrize("code", ["Freier Text mit Leerzeichen", "a" * 41, "meldung..x", "a.b.c.d", 3, None])
 def test_a_code_that_is_not_a_code_gives_no_text(hass, code):
     """Was kein Code ist (freier Text), kommt nie in die Beschreibung."""
@@ -639,3 +645,32 @@ def test_clearing_removes_the_update_repair(hass):
 def test_the_update_repair_names_the_place_to_switch_it_back_on(path):
     issue = json.loads((_COMPONENT / path).read_text())["issues"]["auto_update_aus"]
     assert issue["title"].strip() and issue["description"].strip()
+
+
+# --- Hinweis "Geraet neu einrichten" nach dem Wechsel der Identitaet ---
+
+
+def test_the_new_identity_notice_is_a_warning_and_goes_when_taken_back(hass):
+    repairs.async_set_neue_identitaet(hass, True)
+
+    issue = _issue(hass, "neue_identitaet")
+    assert (issue.severity, issue.is_fixable, issue.translation_key) == (ir.IssueSeverity.WARNING, False, "neue_identitaet")
+    assert issue.translation_placeholders is None
+    repairs.async_set_neue_identitaet(hass, True)  # wiederholt: dasselbe Issue
+    assert list(_own_issues(hass)) == ["neue_identitaet"]
+
+    repairs.async_set_neue_identitaet(hass, False)
+    assert _own_issues(hass) == {}
+
+
+def test_clearing_all_repairs_takes_the_new_identity_notice(hass):
+    repairs.async_set_neue_identitaet(hass, True)
+    repairs.async_clear(hass)
+    assert _own_issues(hass) == {}
+
+
+def test_the_new_identity_notice_has_a_text_in_every_language():
+    for path in ("strings.json", "translations/de.json", "translations/en.json"):
+        text = json.loads((Path(repairs.__file__).parent / path).read_text())["issues"]["neue_identitaet"]
+        assert text["title"].strip() and text["description"].strip(), path
+        assert not re.findall(r"\{\w+\}", text["description"]), path

@@ -3,11 +3,18 @@ oder aufgerufen werden. Je Zeile der Grund. Aufruf: scripts/check.sh --only lint
 nicht: ein Treffer dort ist ein Befund (der Contract-Check liest sie, die Integration selbst nicht)."""
 
 # HA-Hooks der Integration (__init__.py): HA ruft sie ueber den Modulnamen auf.
-async_setup_entry  # HA-Hook: Integration und jede Plattform (binary_sensor, number, sensor)
+async_setup  # HA-Hook: Integration laden (Dienste anmelden)
+CONFIG_SCHEMA  # HA liest das Konfigurationsschema der Integration (nur ueber Config-Eintraege)
+async_setup_entry  # HA-Hook: Integration und jede Plattform (binary_sensor, button, number, sensor)
 async_unload_entry  # HA-Hook: Eintrag entladen
 async_remove_entry  # HA-Hook: Eintrag entfernt
 async_remove_config_entry_device  # HA-Hook: Geraet von Hand loeschen (Kreis-Geraete)
 async_get_config_entry_diagnostics  # HA-Hook: Diagnose-Download des Eintrags (diagnostics.py)
+
+# Schema der Abwesenheits-Ereignisse: der Contract-Check liest es; gesendet wird das zuletzt gelesene Status-Schema
+# (`wunsch_schema`), das heute dasselbe ist.
+ABWESEND_EVENT_SCHEMA  # Contract-Check (Vertrag V5)
+ABWESEND_ENDE_EVENT_SCHEMA  # Contract-Check (Vertrag V5)
 
 # Config-Flow (config_flow.py): HA registriert den Flow ueber domain= und ruft Schritte als async_step_<step_id>.
 SmartHeatConfigFlow  # HA-Hook: ConfigFlow-Unterklasse, registriert ueber domain=
@@ -43,6 +50,7 @@ _._attr_suggested_display_precision  # HA-Entity-Attribut (SensorEntity.suggeste
 _._attr_options  # HA-Entity-Attribut (SensorEntity.options, Enum-Sensor)
 _._attr_extra_state_attributes  # HA-Entity-Attribut (Entity.extra_state_attributes)
 _.async_set_native_value  # HA-Hook: NumberEntity, Dienst number.set_value
+_.async_press  # HA-Hook: ButtonEntity, Dienst button.press
 _.available  # HA-Entity-Eigenschaft (Entity.available): "nicht verfuegbar" bei einem Versionsbefund
 _._attr_state_class  # HA-Entity-Attribut (SensorEntity.state_class)
 _._attr_entity_registry_enabled_default  # HA-Entity-Attribut (Entity.entity_registry_enabled_default): Hebel aus
@@ -54,7 +62,7 @@ ERSTER_KREIS  # Nummer des ersten Kreises als Vorgabe fuer Werkzeuge, die genau 
 _.eintraege  # Anzahl der gemerkten Befunde
 _.ausstehend  # Anzahl der Befunde, deren Meldung noch aussteht
 
-# Plattformen (sensor.py, binary_sensor.py, number.py): HA liest PARALLEL_UPDATES je Plattformmodul.
+# Plattformen (sensor.py, binary_sensor.py, button.py, number.py): HA liest PARALLEL_UPDATES je Plattformmodul.
 PARALLEL_UPDATES  # HA-Hook: Begrenzung gleichzeitiger Aufrufe je Plattform
 
 # const.py: Kopie der Servergrenze je Kreis; der Assistent erreicht sie mit zwei Raeumen zu je 3 Fuehlern nie, der

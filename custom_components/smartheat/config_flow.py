@@ -46,7 +46,9 @@ from .const import (
     AUFTRAG_FEHLGESCHLAGEN,
     AUFTRAG_FERTIG,
     AUFTRAG_WAIT_SECONDS,
+    CODE_POLL_SECONDS,
     CODE_WAIT_MAX_SECONDS,
+    CODE_WAIT_SECONDS,
     DEFAULT_BASE_URL,
     DISCOVERY_FIELDS,
     DISCOVERY_WAIT_SECONDS,
@@ -184,6 +186,10 @@ class _Abbruch(_Unterbrechung):
         super().__init__(reason)
         self.reason = reason
         self.placeholders = placeholders
+
+
+class _CodeFehlt(Exception):
+    """Das Add-on hat auf die Anforderung keinen neuen Uebernahme-Code gemeldet."""
 
 
 async def _pause(sekunden: float) -> None:
@@ -549,7 +555,10 @@ class SmartHeatConfigFlow(ProgressFlowMixin, ConfigFlow, domain=DOMAIN):
     async def _uebernehmen(self) -> tuple[str, str] | None:
         """(Fehlerschluessel des Formulars, Text des Servers) oder None."""
         assert self._client is not None
-        code = await self._uebernahme_code()
+        try:
+            code = await self._uebernahme_code()
+        except _CodeFehlt:
+            return "uebernahme_code_fehlt", ""
         try:
             await self._client.uebernehmen(self._discovery["geraet_id"], code)
         except TokenUngueltig:
@@ -571,16 +580,35 @@ class SmartHeatConfigFlow(ProgressFlowMixin, ConfigFlow, domain=DOMAIN):
         return None
 
     async def _uebernahme_code(self) -> str | None:
-        """Code nur aus der aktuellen Discovery der Heizungsbruecke (async_discovery liest nur deren Nachrichten),
-        nie aus der ersten Meldung, die den Flow gestartet hat. Meldet das Add-on kein oder ein anderes Geraet:
-        Abbruch. Neu konfigurieren uebernimmt ein eigenes Geraet ohne Code."""
+        """Code nur auf Anforderung: das Add-on zeigt ihn erst, wenn der Assistent ihn mit `code <geraet_id>` verlangt.
+        Gelesen wird nur die aktuelle Discovery der Heizungsbruecke (async_discovery liest nur deren Nachrichten), nie
+        die erste Meldung, die den Flow gestartet hat; ein Code, der schon vor der Anforderung dort stand, zaehlt nicht.
+        Meldet das Add-on kein oder ein anderes Geraet: Abbruch; steht es nicht im Zustand `nicht_uebernommen`: kein
+        Code (None). Kommt der Befehl nicht an oder in CODE_WAIT_SECONDS
+        kein neuer Code: `_CodeFehlt`. Neu konfigurieren uebernimmt ein eigenes Geraet ohne Code."""
         if self._reconfigure:
             return None
-        frisch = _discovery(await addon_control.async_discovery(self.hass))
-        if frisch.get("geraet_id") != self._discovery["geraet_id"]:
+        geraet_id = self._discovery["geraet_id"]
+        vorher = _discovery(await addon_control.async_discovery(self.hass))
+        if vorher.get("geraet_id") != geraet_id:
             _LOGGER.warning("Einrichtung: das Add-on meldet dieses Geraet nicht (mehr)")
             raise _Abbruch("geraet_nicht_gemeldet")
-        return frisch.get("claim_code")
+        if vorher.get("zustand") != "nicht_uebernommen":
+            return None  # ein uebernommenes Geraet braucht keinen Code, das Add-on legte auch keinen an
+        try:
+            await addon_control.async_code_anfordern(self.hass, geraet_id)
+        except addon_control.CodeFehlt:
+            raise _CodeFehlt from None
+        deadline = time.monotonic() + CODE_WAIT_SECONDS
+        while True:
+            frisch = _discovery(await addon_control.async_discovery(self.hass))
+            code = frisch.get("claim_code")
+            if frisch.get("geraet_id") == geraet_id and code is not None and code != vorher.get("claim_code"):
+                return code
+            if time.monotonic() >= deadline:
+                _LOGGER.warning("Einrichtung: das Add-on hat keinen neuen Uebernahme-Code gemeldet (aus oder zu alt?)")
+                raise _CodeFehlt
+            await _pause(CODE_POLL_SECONDS)
 
     async def async_step_geraet(self, user_input: dict | None = None) -> ConfigFlowResult:
         assert self._client is not None

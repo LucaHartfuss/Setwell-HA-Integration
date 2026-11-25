@@ -174,6 +174,7 @@
       "sitzung_abgelaufen": "The sign-in has expired. Submit to get a new code.",
       "erneut_anmelden": "The confirmation in the portal is more than ten minutes old. Submit to get a new code.",
       "code_abgelaufen": "The code has expired. Submit to get a new one.",
+      "uebernahme_code_fehlt": "The Heizungsbrücke add-on did not report a takeover code. Is it running and up to date? Submit to try again.",
       "required": "Please assign.",
       "wrong_domain": "This entity does not fit this field.",
       "entity_not_found": "Entity not found.",
@@ -308,19 +309,37 @@
       "kaelteschutz": {"name": "Cold protection", "state": {"aus": "Off", "soll": "Room too cold compared to the target", "frost": "Near freezing"}},
       "addon_version": {"name": "Add-on version"},
       "raumtemperatur": {"name": "Room temperature"},
-      "befunde": {"name": "Findings"}
+      "befunde": {"name": "Findings"},
+      "zurueck_am": {"name": "Back on"}
     },
-    "binary_sensor": {"notbetrieb": {"name": "Emergency mode"}, "server_verbunden": {"name": "Server connected"}},
+    "binary_sensor": {"notbetrieb": {"name": "Emergency mode"}, "server_verbunden": {"name": "Server connected"}, "abwesend": {"name": "Away"}},
+    "button": {"abwesenheit_beenden": {"name": "End absence"}},
     "number": {"wunschtemperatur": {"name": "Desired temperature"}}
   },
   "exceptions": {
     "wunsch_ungueltig": {"message": "The desired temperature must be a number."},
-    "kreis_nicht_gemeldet": {"message": "The system does not report this heating circuit at the moment, so SmartHeat cannot pass on the target temperature."},
+    "kreis_nicht_gemeldet": {"message": "The system does not report this heating circuit at the moment, so SmartHeat cannot pass on your input."},
     "thermostat_aus": {"message": "The thermostat is switched off. SmartHeat accepts no target temperature while it is off."},
-    "addon_nicht_bereit": {"message": "The add-on is not running or not responding, so SmartHeat cannot pass on the target temperature. Please wait until the add-on is back."},
-    "addon_fehlt": {"message": "The add-on is not installed, so SmartHeat cannot pass on the target temperature."},
-    "integration_veraltet": {"message": "The SmartHeat integration is older than the add-on and cannot read its messages, so it cannot pass on the target temperature. Please update the integration."},
-    "addon_veraltet": {"message": "The SmartHeat add-on is older than the integration and not understood by it, so the integration cannot pass on the target temperature. Please update the add-on."}
+    "addon_nicht_bereit": {"message": "The add-on is not running or not responding, so SmartHeat cannot pass on your input. Please wait until the add-on is back."},
+    "addon_fehlt": {"message": "The add-on is not installed, so SmartHeat cannot pass on your input."},
+    "integration_veraltet": {"message": "The SmartHeat integration is older than the add-on and cannot read its messages, so it cannot pass on your input. Please update the integration."},
+    "addon_veraltet": {"message": "The SmartHeat add-on is older than the integration and not understood by it, so the integration cannot pass on your input. Please update the add-on."},
+    "kreis_unbekannt": {"message": "The selected device is not a heating circuit of SmartHeat. Please select the device of a heating circuit."},
+    "abwesend_bis_ungueltig": {"message": "The return time is not a valid date and time."},
+    "abwesend_bis_vergangen": {"message": "The return time must be in the future."},
+    "abwesend_bis_zu_weit": {"message": "The return time must be at most 365 days ahead."},
+    "abwesend_temperatur_ungueltig": {"message": "The away temperature must be a number from 15 to 25 °C."},
+    "nicht_abwesend": {"message": "No absence is running for this heating circuit, so there is nothing to end."}
+  },
+  "services": {
+    "abwesend_bis": {
+      "name": "Away until",
+      "description": "Sets an absence for the selected heating circuits until the given time. The heating then holds the away temperature and returns to normal operation by itself.",
+      "fields": {
+        "bis": {"name": "Back on", "description": "Date and time of your return, at most 365 days ahead."},
+        "temperatur": {"name": "Away temperature", "description": "Room temperature during the absence, 15 to 25 °C. Without a value SmartHeat uses the last chosen one or its suggestion."}
+      }
+    }
   },
   "issues": {
     "update_noetig": {"title": "SmartHeat: update the add-on", "description": "{text} Settings → Apps → Heizungsbrücke → Update."},
@@ -333,6 +352,7 @@
     "soll_quelle_aus": {"title": "SmartHeat: thermostat is off", "description": "{text}"},
     "konfiguration_abgelehnt": {"title": "SmartHeat: setting rejected", "description": "The add-on rejected the new setting: {text} Please check it under SmartHeat → Reconfigure."},
     "gesperrt": {"title": "SmartHeat: device blocked", "description": "{text}"},
+    "abwesend_abgelehnt": {"title": "SmartHeat: absence not accepted", "description": "The add-on rejected the absence: {text} Please check the return time and the temperature."},
     "geraet_hinweis": {"title": "SmartHeat notice", "description": "{text}"},
     "geraet_hinweise_viele": {"title": "SmartHeat: many more notices", "description": "The device reports {anzahl} further notices that are not listed here. Please check the heating installation and the add-on."},
     "integration_veraltet": {"title": "SmartHeat: update the integration", "description": "The add-on is newer than this integration and speaks a version it does not read. The values are not shown until the integration is updated to at least version {mindest_integration}. Settings → Devices & services → HACS → SmartHeat → Update."},
@@ -342,7 +362,8 @@
     "reagiert_nicht": {"title": "SmartHeat: add-on not responding", "description": "The Heizungsbrücke add-on has not reported for 15 minutes, so the heating control is interrupted. Please check the add-on under Settings → Apps; if possible, SmartHeat restarts it."},
     "addon_fehlt": {"title": "SmartHeat: add-on not installed", "description": "The Heizungsbrücke add-on is not installed. The heating stays at its last values. Installing it again creates a new device."},
     "addon_mehrfach": {"title": "SmartHeat: add-on installed more than once", "description": "The Heizungsbrücke add-on is installed more than once, so SmartHeat cannot tell which one is meant. Please uninstall all but one under Settings → Apps."},
-    "auto_update_aus": {"title": "SmartHeat: automatic updates of the add-on are off", "description": "Automatic updates are switched off for the Heizungsbrücke add-on, so it only gets new versions when you update it yourself. You can switch them back on under Settings → Apps → Heizungsbrücke (Auto update). You can also ignore this notice."}
+    "auto_update_aus": {"title": "SmartHeat: automatic updates of the add-on are off", "description": "Automatic updates are switched off for the Heizungsbrücke add-on, so it only gets new versions when you update it yourself. You can switch them back on under Settings → Apps → Heizungsbrücke (Auto update). You can also ignore this notice."},
+    "neue_identitaet": {"title": "SmartHeat: set up the device again", "description": "The device changed its identity because it was released. This entry no longer receives data. Set the device up again under Settings → Devices & services, then remove this old entry."}
   },
   "common": {
     "auto_update_hinweis": "The setup switched on automatic updates for the Heizungsbrücke add-on. You can switch them off under Settings → Apps → Heizungsbrücke (Auto update).",

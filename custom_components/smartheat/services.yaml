@@ -1,0 +1,20 @@
+abwesend_bis:
+  target:
+    device:
+      integration: smartheat
+  fields:
+    bis:
+      required: true
+      example: "2026-12-24 18:00:00"
+      selector:
+        datetime:
+    temperatur:
+      required: false
+      example: 17
+      selector:
+        number:
+          min: 15
+          max: 25
+          step: 0.5
+          unit_of_measurement: "°C"
+          mode: box

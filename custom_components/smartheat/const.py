@@ -23,8 +23,8 @@ STATUS_EVENT_FIELDS = (
     "konfig_version", "mindest_integration", "benachrichtigung", "hinweise_aus", "push_regeln", "kreise",
 )
 STATUS_KREIS_FIELDS = (
-    "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "boost",
-    "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz",
+    "kreis", "name", "raum_soll", "raum_ist", "einlernphase_tag", "testphase_bis", "befunde", "abwesend",
+    "boost", "hebelsatz", "hebel", "gelernt", "abo", "abo_frist_ende", "zustand", "kaelteschutz",
 )
 # Lebenszeichen der Integration an das Add-on (Vertrag V5). Der Kern -- Name, Typ und Bedeutung dieser drei Felder --
 # bleibt in jedem kuenftigen Schema gleich, damit jedes Add-on Version und gelesene Schemata der Integration lesen kann.
@@ -52,7 +52,7 @@ MELDUNG_KEY_RE = re.compile(r"[a-z0-9_]{1,40}|[a-z0-9_]{1,29}:[0-9a-f]{10}")
 MELDUNG_CODE_RE = re.compile(r"[a-z0-9_]{1,40}(?:\.[a-z0-9_]{1,40}){0,2}")
 HINWEIS_SOLL_QUELLE_AUS = "soll_quelle_aus"
 HINWEIS_KEYS = ("update_noetig", "geraet_doppelt", "wunsch_begrenzt", HINWEIS_SOLL_QUELLE_AUS,
-                "konfiguration_abgelehnt", "gesperrt")
+                "konfiguration_abgelehnt", "gesperrt", "abwesend_abgelehnt")
 # Meldungen der Weiche mit eigenem Text je Code (Uebersetzung `issues.<translation_key>`): `update_noetig` nennt in
 # `params.ende` das Datum (ISO), nach dem die urspruenglichen Werte wieder gelten; ohne lesbares Datum und bei
 # `update_noetig_unbekannt` gilt der Text ohne Datum; `update_noetig_mindest` (orange) gilt ohne kritischen Eintrag, also
@@ -149,6 +149,12 @@ STDIN_BEFEHL_ENTFERNEN = "entfernen"
 # (Felder NACHWEIS_EVENT_FIELDS: Schema, eigene Geraete-ID, Unix-Sekunden, Signatur des Geraeteschluessels ueber den festen
 # Pfad der Route `geraetecode`). Kopie von heizungsbruecke/stdin_befehl.py und dem Ereignis des Add-ons (Vertrag V5).
 STDIN_BEFEHL_NACHWEIS = "nachweis"
+# Uebernahme-Code: die Integration schreibt `code <geraet_id>`; das Add-on legt einen neuen Code an und zeigt ihn dann
+# eine Stunde lang in der Discovery (Feld `claim_code`). Der Assistent wartet hoechstens CODE_WAIT_SECONDS darauf.
+# Kopie von heizungsbruecke/stdin_befehl.py (Vertrag V5).
+STDIN_BEFEHL_CODE = "code"
+CODE_WAIT_SECONDS = 30
+CODE_POLL_SECONDS = 1
 STDIN_ZEILE_FORMAT = "{befehl} {geraet_id}\n"
 # Wahl beim Entfernen: `entfernen <geraet_id> freigeben` laesst das Geraet nach der Abmeldung die Freigabe anfragen
 # (es bleibt im Konto, bis der Eigentuemer sie im Portal bestaetigt); ohne den Zusatz fragt es nichts an. Die Option des Eintrags (Vorgabe aus) steuert, ob die Integration ihn anhaengt.
@@ -167,6 +173,16 @@ WUNSCH_EVENT = "smartheat_wunsch"
 # Daten des Wunsch-Ereignisses: schema, kreis (Pflicht, ab 1) und raum_soll; ohne gueltigen Kreis verwirft das Add-on es.
 WUNSCH_EVENT_SCHEMA = 4
 RAUM_SOLL_MIN, RAUM_SOLL_MAX, RAUM_SOLL_STEP = 15.0, 25.0, 0.5
+# Abwesenheit je Kreis (Vertrag V5): `smartheat_abwesend` {schema, kreis, bis, temp?} setzt sie, `smartheat_abwesend_ende`
+# {schema, kreis} beendet sie. `bis` ist ein Zeitpunkt in UTC (ISO 8601), hoechstens ABWESEND_MAX_TAGE Tage voraus; die
+# Temperatur liegt im Bedienbereich des Wunschs (RAUM_SOLL_*). Das Add-on prueft erneut und fuehrt aus.
+ABWESEND_EVENT = "smartheat_abwesend"
+ABWESEND_ENDE_EVENT = "smartheat_abwesend_ende"
+ABWESEND_EVENT_SCHEMA = WUNSCH_EVENT_SCHEMA
+ABWESEND_EVENT_FIELDS = ("schema", "kreis", "bis", "temp")
+ABWESEND_ENDE_EVENT_SCHEMA = WUNSCH_EVENT_SCHEMA
+ABWESEND_ENDE_EVENT_FIELDS = ("schema", "kreis")
+ABWESEND_MAX_TAGE = 365
 # Grenzen der Auswahl im Assistenten: Kopie von heizungsserver einrichtung/ha.py MAX_RAUMFUEHLER,
 # MAX_BATTERIEN, MAX_HANDYS (V3, Contract-Check 76); mehr lehnt der Server mit 400 ab.
 EINRICHTUNG_MAX_RAUMFUEHLER = 16
@@ -298,6 +314,10 @@ RESTART_WINDOW_SECONDS = 3600
 WATCHDOG_ISSUE_ID = "waechter"
 # Hinweis, dass der Kunde die automatischen Updates des Add-ons ausgeschaltet hat (Text nur in den Uebersetzungen).
 AUTO_UPDATE_ISSUE_ID = "auto_update_aus"
+# Hinweis, dass das Geraet seine Identitaet gewechselt hat und neu eingerichtet werden muss (Text nur in den
+# Uebersetzungen). Das Add-on meldet sich dann mit neuer ID und dem Zustand `nicht_uebernommen`.
+NEUE_IDENTITAET_ISSUE_ID = "neue_identitaet"
+GERAET_ZUSTAND_NICHT_UEBERNOMMEN = "nicht_uebernommen"
 
 # Push auf die Handys des Kunden. Der Store haelt Tageszaehler, aufgeschobene und offene Meldungen, nie Ziele.
 PUSH_STORE_KEY = "smartheat.push"

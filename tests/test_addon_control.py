@@ -13,7 +13,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.smartheat import addon_control
-from custom_components.smartheat.addon_control import BootstrapUrl, NachweisFehlt
+from custom_components.smartheat.addon_control import BootstrapUrl, CodeFehlt, NachweisFehlt
 from custom_components.smartheat.const import ADDON_REPOSITORY_URL, DEFAULT_BASE_URL, DOMAIN, NACHWEIS_EVENT
 
 from .supervisor_fakes import BRIDGE_SLUG, discovery_message, installed_addon, repository
@@ -538,3 +538,40 @@ async def test_der_nachweis_wird_nie_geloggt(hass, supervisor, caplog):
     await addon_control.async_nachweis_anfordern(hass, NACHWEIS_ID, 5)
 
     assert "sig_geheim" not in caplog.text and "1761800000" not in caplog.text
+
+
+# --- Uebernahme-Code vom Add-on anfordern ---
+
+
+async def test_code_anfordern_schreibt_nur_den_befehl(hass, supervisor):
+    await addon_control.async_code_anfordern(hass, NACHWEIS_ID)
+
+    # Ein Zeilenende aus STDIN_ZEILE_FORMAT, eines haengt der Supervisor selbst an.
+    assert supervisor.stdin == [(SLUG, b"code shg-aaaaaaaaaaaaaaaa\n\n")]
+
+
+@pytest.mark.parametrize("geraet_id", [None, 7, "", "shg-a", "shg-aaaaaaaaaaaaaaaa\n", "shg-aaaaaaaaaaaaaaaa x",
+                                       "SHG-AAAAAAAAAAAAAAAA"])
+async def test_code_anfordern_ohne_gueltige_geraete_id_schreibt_nichts(hass, supervisor, geraet_id):
+    with pytest.raises(CodeFehlt):
+        await addon_control.async_code_anfordern(hass, geraet_id)
+    assert supervisor.stdin == []
+
+
+@pytest.mark.parametrize("aufbau", ["kein_supervisor", "bruecke_fehlt", "mehrfach", "gestoppt", "supervisor_fehler"])
+async def test_code_anfordern_ohne_erreichbare_bruecke_fehlt_ohne_werte_im_log(hass, supervisor, caplog, aufbau):
+    if aufbau == "kein_supervisor":
+        supervisor.hassio = False
+    elif aufbau == "bruecke_fehlt":
+        supervisor.installed = []
+    elif aufbau == "mehrfach":
+        supervisor.installed = [installed_addon(SLUG), installed_addon(SLUG)]
+    elif aufbau == "gestoppt":
+        supervisor.installed = [installed_addon(SLUG, state=AddonState.STOPPED)]
+    else:
+        supervisor.errors["addons.write_addon_stdin"] = SupervisorError("Supervisor GEHEIM")
+
+    with caplog.at_level(logging.DEBUG), pytest.raises(CodeFehlt):
+        await addon_control.async_code_anfordern(hass, NACHWEIS_ID)
+
+    assert "GEHEIM" not in caplog.text and NACHWEIS_ID not in caplog.text

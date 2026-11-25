@@ -23,7 +23,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType, json_loads
 
-from . import binary_sensor, geraete, number, sensor
+from . import binary_sensor, button, geraete, number, sensor
 from .const import DOMAIN, EINRICHTUNG_MAX_KREISE, ERSTER_KREIS, entity_id, slug, unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class _Plan:
 
 def _schluessel(entry: ConfigEntry) -> tuple[set[str], set[str]]:
     anlage = {sensor.STATUS_KEY, *(feld.key for feld in sensor.ANLAGE_FIELDS), *binary_sensor.ENTITY_KEYS}
-    kreis = {*(feld.key for feld in sensor.kreis_fields(entry.data)), number.KEY}
+    kreis = {*(feld.key for feld in sensor.kreis_fields(entry.data)), number.KEY, binary_sensor.ABWESEND_KEY, button.KEY}
     return anlage, kreis
 
 

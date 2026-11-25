@@ -31,6 +31,7 @@ from .const import (
     NACHWEIS_SIGNATUR_MAX,
     NACHWEIS_WAIT_SECONDS,
     OPTION_BOOTSTRAP_URL,
+    STDIN_BEFEHL_CODE,
     STDIN_BEFEHL_ENTFERNEN,
     STDIN_BEFEHL_NACHWEIS,
     STDIN_ZEILE_FORMAT,
@@ -273,6 +274,33 @@ def _nachweis_aus(daten: object, geraet_id: str) -> dict | None:
             or not _SIGNATUR_RE.fullmatch(signatur)):
         return None
     return {"geraet_id": geraet_id, "zeitstempel": zeitstempel, "signatur": signatur}
+
+
+class CodeFehlt(Exception):
+    """Der Befehl `code` ist beim Add-on nicht angekommen (keine oder ungueltige Geraete-ID, kein Supervisor, Bruecke
+    fehlt oder mehrfach, Add-on gestoppt). Der Text nennt nie einen Wert."""
+
+
+async def async_code_anfordern(hass: HomeAssistant, geraet_id: object) -> None:
+    """Bittet das eigene Add-on um einen neuen Uebernahme-Code: schreibt `code <geraet_id>` als stdin-Zeile. Der Code
+    selbst kommt spaeter in der Discovery (`async_discovery`); hier wird weder gewartet noch ein Wert gelesen. Wirft
+    `CodeFehlt`, wenn der Befehl nicht ankommt. Geraete-ID und Code stehen nie im Log; `fullmatch`, damit kein
+    Zeilenumbruch eine zweite Zeile einschmuggelt."""
+    if not isinstance(geraet_id, str) or not GERAET_ID_RE.fullmatch(geraet_id):
+        raise CodeFehlt("Keine gueltige Geraete-ID")
+    try:
+        if not is_hassio(hass):
+            raise CodeFehlt("Kein Supervisor")
+        slug = await async_bridge_slug(hass)
+        if slug is None:
+            raise CodeFehlt("Heizungsbruecke nicht gefunden")
+        zeile = STDIN_ZEILE_FORMAT.format(befehl=STDIN_BEFEHL_CODE, geraet_id=geraet_id)
+        await get_supervisor_client(hass).addons.write_addon_stdin(slug, zeile.encode())
+    except CodeFehlt:
+        raise
+    except Exception as error:  # noqa: BLE001 - jeder Fehler hier heisst: kein Befehl zugestellt
+        _LOGGER.warning("Uebernahme-Code beim Heizungsbruecke-Add-on nicht angefordert (%s)", type(error).__name__)
+        raise CodeFehlt("Befehl nicht zugestellt") from None
 
 
 async def async_nachweis_anfordern(hass: HomeAssistant, geraet_id: object,

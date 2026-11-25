@@ -30,7 +30,7 @@ PAKET = Path(__file__).parent.parent / "custom_components" / "smartheat"
 
 ANLAGE_SENSOREN = ("status", "letzte_serverantwort", "datenfehler", "addon_version")
 ANLAGE_BINAER = ("notbetrieb", "server_verbunden")
-KREIS_SENSOREN = ("zustand", "kaelteschutz", "abo", "boost", "raumtemperatur", "befunde")
+KREIS_SENSOREN = ("zustand", "kaelteschutz", "abo", "boost", "raumtemperatur", "befunde", "zurueck_am")
 HEBEL_SCHLUESSEL = ("heizkurve", "parallelverschiebung", "heizgrenze", "mindestvorlauf", "gelernte_steigung",
                     "gelernte_heizgrenze")
 
@@ -123,7 +123,8 @@ async def test_es_gibt_genau_diese_entities_und_keine_alten_oder_alltags_entitie
 
     erwartet = {f"{TENANT}_{key}" for key in (*ANLAGE_SENSOREN, *ANLAGE_BINAER)}
     for n in (1, 2):
-        erwartet |= {f"{TENANT}_k{n}_{key}" for key in (*KREIS_SENSOREN, "wunschtemperatur", *HEBEL_SCHLUESSEL)}
+        erwartet |= {f"{TENANT}_k{n}_{key}" for key in (
+            *KREIS_SENSOREN, "abwesend", "abwesenheit_beenden", "wunschtemperatur", *HEBEL_SCHLUESSEL)}
     assert set(_eintraege(hass, entry)) == erwartet
     for alt in ("zustand", "kaelteschutz", "boost", "abo", "wunschtemperatur", "heizkurve"):
         assert f"{TENANT}_{alt}" not in _eintraege(hass, entry)

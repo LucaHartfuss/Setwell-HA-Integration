@@ -174,6 +174,7 @@
       "sitzung_abgelaufen": "Die Anmeldung ist abgelaufen. Absenden holt einen neuen Code.",
       "erneut_anmelden": "Die Bestätigung im Portal ist älter als zehn Minuten. Absenden holt einen neuen Code.",
       "code_abgelaufen": "Der Code ist abgelaufen. Absenden holt einen neuen.",
+      "uebernahme_code_fehlt": "Das Add-on Heizungsbrücke hat keinen Übernahme-Code gemeldet. Läuft es und ist es aktuell? Absenden versucht es erneut.",
       "required": "Bitte zuordnen.",
       "wrong_domain": "Diese Entity passt nicht zu diesem Feld.",
       "entity_not_found": "Entity nicht gefunden.",
@@ -308,19 +309,37 @@
       "kaelteschutz": {"name": "Kälteschutz", "state": {"aus": "Aus", "soll": "Raum zu kalt gegenüber Wunsch", "frost": "Frostnähe"}},
       "addon_version": {"name": "Add-on-Version"},
       "raumtemperatur": {"name": "Raumtemperatur"},
-      "befunde": {"name": "Befunde"}
+      "befunde": {"name": "Befunde"},
+      "zurueck_am": {"name": "Zurück am"}
     },
-    "binary_sensor": {"notbetrieb": {"name": "Notbetrieb"}, "server_verbunden": {"name": "Server verbunden"}},
+    "binary_sensor": {"notbetrieb": {"name": "Notbetrieb"}, "server_verbunden": {"name": "Server verbunden"}, "abwesend": {"name": "Abwesend"}},
+    "button": {"abwesenheit_beenden": {"name": "Abwesenheit beenden"}},
     "number": {"wunschtemperatur": {"name": "Wunschtemperatur"}}
   },
   "exceptions": {
     "wunsch_ungueltig": {"message": "Die Wunschtemperatur muss eine Zahl sein."},
-    "kreis_nicht_gemeldet": {"message": "Die Anlage meldet diesen Heizkreis gerade nicht, darum kann SmartHeat die Wunschtemperatur nicht weitergeben."},
+    "kreis_nicht_gemeldet": {"message": "Die Anlage meldet diesen Heizkreis gerade nicht, darum kann SmartHeat Ihre Eingabe nicht weitergeben."},
     "thermostat_aus": {"message": "Das Thermostat ist ausgeschaltet. Solange es aus ist, nimmt SmartHeat keine Wunschtemperatur an."},
-    "addon_nicht_bereit": {"message": "Das Add-on läuft nicht oder meldet sich nicht, SmartHeat kann die Wunschtemperatur deshalb nicht weitergeben. Bitte warten, bis das Add-on wieder läuft."},
-    "addon_fehlt": {"message": "Das Add-on ist nicht installiert, SmartHeat kann die Wunschtemperatur deshalb nicht weitergeben."},
-    "integration_veraltet": {"message": "Die SmartHeat-Integration ist älter als das Add-on und liest dessen Meldungen nicht, SmartHeat kann die Wunschtemperatur deshalb nicht weitergeben. Bitte die Integration aktualisieren."},
-    "addon_veraltet": {"message": "Das SmartHeat-Add-on ist älter als die Integration und wird von ihr nicht verstanden, SmartHeat kann die Wunschtemperatur deshalb nicht weitergeben. Bitte das Add-on aktualisieren."}
+    "addon_nicht_bereit": {"message": "Das Add-on läuft nicht oder meldet sich nicht, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben. Bitte warten, bis das Add-on wieder läuft."},
+    "addon_fehlt": {"message": "Das Add-on ist nicht installiert, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben."},
+    "integration_veraltet": {"message": "Die SmartHeat-Integration ist älter als das Add-on und liest dessen Meldungen nicht, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben. Bitte die Integration aktualisieren."},
+    "addon_veraltet": {"message": "Das SmartHeat-Add-on ist älter als die Integration und wird von ihr nicht verstanden, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben. Bitte das Add-on aktualisieren."},
+    "kreis_unbekannt": {"message": "Das gewählte Gerät ist kein Heizkreis von SmartHeat. Bitte das Gerät eines Heizkreises wählen."},
+    "abwesend_bis_ungueltig": {"message": "Die Rückkehrzeit ist kein gültiges Datum mit Uhrzeit."},
+    "abwesend_bis_vergangen": {"message": "Die Rückkehrzeit muss in der Zukunft liegen."},
+    "abwesend_bis_zu_weit": {"message": "Die Rückkehrzeit darf höchstens 365 Tage voraus liegen."},
+    "abwesend_temperatur_ungueltig": {"message": "Die Abwesenheitstemperatur muss eine Zahl von 15 bis 25 °C sein."},
+    "nicht_abwesend": {"message": "Für diesen Heizkreis läuft keine Abwesenheit, es gibt nichts zu beenden."}
+  },
+  "services": {
+    "abwesend_bis": {
+      "name": "Abwesend bis",
+      "description": "Setzt für die gewählten Heizkreise eine Abwesenheit bis zum angegebenen Zeitpunkt. Die Heizung hält dann die Abwesenheitstemperatur und kehrt von selbst zum normalen Betrieb zurück.",
+      "fields": {
+        "bis": {"name": "Zurück am", "description": "Datum und Uhrzeit Ihrer Rückkehr, höchstens 365 Tage voraus."},
+        "temperatur": {"name": "Abwesenheitstemperatur", "description": "Raumtemperatur während der Abwesenheit, 15 bis 25 °C. Ohne Angabe nimmt SmartHeat die zuletzt gewählte oder seinen Vorschlag."}
+      }
+    }
   },
   "issues": {
     "update_noetig": {"title": "SmartHeat: Add-on aktualisieren", "description": "{text} Einstellungen → Apps → Heizungsbrücke → Aktualisieren."},
@@ -333,6 +352,7 @@
     "soll_quelle_aus": {"title": "SmartHeat: Thermostat ist aus", "description": "{text}"},
     "konfiguration_abgelehnt": {"title": "SmartHeat: Einstellung abgelehnt", "description": "Das Add-on hat die neue Einstellung abgelehnt: {text} Bitte unter SmartHeat → Neu konfigurieren prüfen."},
     "gesperrt": {"title": "SmartHeat: Gerät gesperrt", "description": "{text}"},
+    "abwesend_abgelehnt": {"title": "SmartHeat: Abwesenheit nicht übernommen", "description": "Das Add-on hat die Abwesenheit abgelehnt: {text} Bitte Rückkehrzeit und Temperatur prüfen."},
     "geraet_hinweis": {"title": "SmartHeat-Hinweis", "description": "{text}"},
     "geraet_hinweise_viele": {"title": "SmartHeat: weitere Hinweise", "description": "Das Gerät meldet {anzahl} weitere Hinweise, die hier nicht einzeln aufgeführt sind. Bitte die Heizungsanlage und das Add-on prüfen."},
     "integration_veraltet": {"title": "SmartHeat: Integration aktualisieren", "description": "Das Add-on ist neuer als diese Integration und spricht eine Version, die sie nicht liest. Die Werte erscheinen erst wieder, wenn die Integration mindestens auf Version {mindest_integration} aktualisiert ist. Einstellungen → Geräte & Dienste → HACS → SmartHeat → Aktualisieren."},
@@ -342,7 +362,8 @@
     "reagiert_nicht": {"title": "SmartHeat: Add-on meldet sich nicht", "description": "Das Add-on Heizungsbrücke meldet sich seit 15 Minuten nicht, die Heizungssteuerung ist unterbrochen. Bitte das Add-on unter Einstellungen → Apps prüfen; wenn möglich, startet SmartHeat es neu."},
     "addon_fehlt": {"title": "SmartHeat: Add-on nicht installiert", "description": "Das Add-on Heizungsbrücke ist nicht installiert. Die Heizung bleibt auf den letzten Werten. Erneutes Installieren ist ein neues Gerät."},
     "addon_mehrfach": {"title": "SmartHeat: Add-on mehrfach installiert", "description": "Das Add-on Heizungsbrücke ist mehrfach installiert, SmartHeat kann nicht erkennen, welches gemeint ist. Bitte alle bis auf eines unter Einstellungen → Apps deinstallieren."},
-    "auto_update_aus": {"title": "SmartHeat: automatische Updates des Add-ons sind aus", "description": "Die automatischen Updates sind für das Add-on Heizungsbrücke ausgeschaltet, es bekommt neue Versionen nur, wenn Sie es selbst aktualisieren. Sie können sie unter Einstellungen → Apps → Heizungsbrücke („Auto update“) wieder einschalten. Sie können diesen Hinweis auch ignorieren."}
+    "auto_update_aus": {"title": "SmartHeat: automatische Updates des Add-ons sind aus", "description": "Die automatischen Updates sind für das Add-on Heizungsbrücke ausgeschaltet, es bekommt neue Versionen nur, wenn Sie es selbst aktualisieren. Sie können sie unter Einstellungen → Apps → Heizungsbrücke („Auto update“) wieder einschalten. Sie können diesen Hinweis auch ignorieren."},
+    "neue_identitaet": {"title": "SmartHeat: Gerät neu einrichten", "description": "Das Gerät hat seine Identität gewechselt, weil es freigegeben wurde. Dieser Eintrag erhält keine Daten mehr. Richten Sie das Gerät unter Einstellungen → Geräte & Dienste neu ein und entfernen Sie danach diesen alten Eintrag."}
   },
   "common": {
     "auto_update_hinweis": "Die Einrichtung hat die automatischen Updates für das Add-on Heizungsbrücke eingeschaltet. Sie können sie unter Einstellungen → Apps → Heizungsbrücke („Auto update“) ausschalten.",

@@ -26,6 +26,7 @@ from .const import (
     BRUECKE_GEFUNDEN,
     BRUECKE_MEHRFACH,
     EINRICHTUNG_MAX_KREISE,
+    GERAET_ZUSTAND_NICHT_UEBERNOMMEN,
     INTEGRATION_EVENT,
     INTEGRATION_EVENT_FIELDS,
     INTEGRATION_EVENT_SCHEMA,
@@ -333,7 +334,11 @@ class SmartHeatCoordinator:
         Ereignis zieht auch den Geraetebaum nach (Anlage, Kreise)."""
         data = event.data
         if data.get("geraet_id") != self.geraet_id:
+            if data.get("geraet_zustand") == GERAET_ZUSTAND_NICHT_UEBERNOMMEN:
+                # Ein Geraet mit anderer ID ist noch nicht uebernommen: das eigene hat seine Identitaet gewechselt.
+                repairs.async_set_neue_identitaet(self.hass, True)
             return
+        repairs.async_set_neue_identitaet(self.hass, False)  # das eigene Geraet lebt noch unter dieser ID
         # Jedes Ereignis des eigenen Geraets ist ein Lebenszeichen des Add-ons, gleich welches Schema und welcher Inhalt:
         # ein neueres Add-on darf nicht als stumm gelten und neu gestartet werden, nur weil die Integration es nicht liest.
         self._watchdog.event_received(_now())
