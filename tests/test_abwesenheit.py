@@ -409,15 +409,18 @@ def test_die_dienstbeschreibung_und_die_uebersetzungen_sind_vollstaendig():
     dienste = yaml.safe_load((paket / "services.yaml").read_text(encoding="utf-8"))
     assert set(dienste) == {"abwesend_bis"}
     beschreibung = dienste["abwesend_bis"]
-    assert beschreibung["target"] == {"device": {"integration": "smartheat"}}
-    assert set(beschreibung["fields"]) == {"bis", "temperatur"}
+    # hassfest verwirft Geraetefilter auf `target`: die Kreise kommen als Feld mit Geraeteauswahl.
+    assert "target" not in beschreibung
+    assert set(beschreibung["fields"]) == {"device_id", "bis", "temperatur"}
+    assert beschreibung["fields"]["device_id"]["required"] is True
+    assert beschreibung["fields"]["device_id"]["selector"] == {"device": {"integration": "smartheat", "multiple": True}}
     assert beschreibung["fields"]["bis"]["required"] is True
     assert "required" not in beschreibung["fields"]["temperatur"] or beschreibung["fields"]["temperatur"]["required"] is False
     for datei in ("strings.json", "translations/en.json", "translations/de.json"):
         text = json.loads((paket / datei).read_text(encoding="utf-8"))
         dienst = text["services"]["abwesend_bis"]
         assert dienst["name"] and dienst["description"], datei
-        assert set(dienst["fields"]) == {"bis", "temperatur"}, datei
+        assert set(dienst["fields"]) == {"device_id", "bis", "temperatur"}, datei
         for feld in dienst["fields"].values():
             assert feld["name"] and feld["description"], datei
         for schluessel in ("abwesend_bis_vergangen", "abwesend_bis_zu_weit", "abwesend_temperatur_ungueltig",

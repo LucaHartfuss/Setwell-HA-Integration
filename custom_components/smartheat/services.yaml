@@ -1,8 +1,11 @@
 abwesend_bis:
-  target:
-    device:
-      integration: smartheat
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: smartheat
+          multiple: true
     bis:
       required: true
       example: "2026-12-24 18:00:00"

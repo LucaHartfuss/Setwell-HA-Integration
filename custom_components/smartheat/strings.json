@@ -336,6 +336,10 @@
       "name": "Away until",
       "description": "Sets an absence for the selected heating circuits until the given time. The heating then holds the away temperature and returns to normal operation by itself.",
       "fields": {
+        "device_id": {
+          "name": "Heating circuits",
+          "description": "The heating circuits the absence applies to."
+        },
         "bis": {"name": "Back on", "description": "Date and time of your return, at most 365 days ahead."},
         "temperatur": {"name": "Away temperature", "description": "Room temperature during the absence, 15 to 25 °C. Without a value SmartHeat uses the last chosen one or its suggestion."}
       }
