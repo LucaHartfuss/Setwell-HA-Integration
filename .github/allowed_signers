@@ -1,5 +1,5 @@
 # Erlaubte Signierschluessel fuer Release-Tags (git tag -v, SSH-Signatur). Kanonisch in
-# HomeAssistant_Dev_Root/tools/release/allowed_signers; identische Kopien in Add-on und Integration unter
+# im Kern-Repo unter tools/release/allowed_signers; identische Kopien in Add-on und Integration unter
 # .github/allowed_signers (Root-check.sh Schritt "copies"). tag_pruefen.sh liest die Datei aus origin/main.
 # Format je Zeile: <Name> namespaces="git" <Schluesseltyp> <oeffentlicher Schluessel>
 # Platzhalter: solange die Zeile unten mit SMARTHEAT-PLATZHALTER beginnt, lehnt tag_pruefen.sh jedes echte Release ab.

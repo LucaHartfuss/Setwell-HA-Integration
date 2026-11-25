@@ -22,8 +22,10 @@ pruefe_token() {
   # $1 = owner/name eines privaten Repos. Kein -L: eine Weiterleitung (301, Repo umgezogen) ist ein Fehler, kein Treffer.
   [ -n "${CI_LESE_TOKEN:-}" ] || fehler "CI_LESE_TOKEN fehlt als Repository-Secret ($RUNBOOK)"
   local status
-  status=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $CI_LESE_TOKEN" \
-    "https://api.github.com/repos/$1") || true
+  # Das Token kommt als Konfiguration ueber stdin (printf ist eingebaut), nie als Argument: Argumente sind in der
+  # Prozessliste sichtbar.
+  status=$(printf 'header = "Authorization: Bearer %s"\n' "$CI_LESE_TOKEN" |
+    curl -s -o /dev/null -w '%{http_code}' -K - "https://api.github.com/repos/$1") || true
   case $status in
     200) ;;
     301) fehler "Repo $1 umgezogen, Tabelle nachziehen (tools/einheiten.txt, HTTP 301)" ;;
@@ -31,20 +33,32 @@ pruefe_token() {
   esac
 }
 url() {
-  # $1 = owner/name, $2 = privat|oeffentlich
-  if [ "$2" = privat ]; then
-    printf 'https://x-access-token:%s@github.com/%s.git' "$CI_LESE_TOKEN" "$1"
+  # $1 = owner/name; nie mit Zugangsdaten (die URL steht in Argumenten und in .git/config)
+  printf 'https://github.com/%s.git' "$1"
+}
+git_zugriff() {
+  # $1 = privat|oeffentlich, danach die git-Argumente. Immer ohne Weiterleitungen (ein umgezogenes oder umgelenktes Repo
+  # darf das Token nicht an einen anderen Host tragen). Fuer private Repos geht das Token als Kopfzeile ueber die
+  # Umgebung nur dieses einen git-Aufrufs (nicht exportiert, nicht in Argumenten, nicht in .git/config). Erst wird die
+  # Kopfzeilenliste geleert: ein Checkout von actions/checkout hinterlegt dort das GITHUB_TOKEN des eigenen Repos, das
+  # sonst zusaetzlich mitgeschickt wird.
+  local sicht=$1 basic
+  shift
+  if [ "$sicht" = privat ]; then
+    basic=$(printf 'x-access-token:%s' "$CI_LESE_TOKEN" | base64 | tr -d '\n')
+    GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=http.https://github.com/.extraheader GIT_CONFIG_VALUE_0= \
+      GIT_CONFIG_KEY_1=http.https://github.com/.extraheader GIT_CONFIG_VALUE_1="Authorization: Basic $basic" \
+      git -c http.followRedirects=false "$@"
   else
-    printf 'https://github.com/%s.git' "$1"
+    git -c http.followRedirects=false "$@"
   fi
 }
 ref_for() {
-  # Ausserhalb jedes Repos ausfuehren: actions/checkout hinterlegt im Checkout einen extraheader mit dem
-  # GITHUB_TOKEN des eigenen Repos, der sonst die Token-URL uebersteuert ("Repository not found").
+  # Ausserhalb jedes Repos ausfuehren: der extraheader von actions/checkout im eigenen Checkout soll nicht wirken.
   # Exaktes Muster refs/heads/<branch> (ein nacktes Muster matcht per Suffix, z. B. "ci-pipeline" auf
   # refs/heads/feat/ci-pipeline). Exit 2 = kein Treffer -> develop; jeder andere Fehler bricht ab.
   local rc=0
-  git -C / ls-remote --exit-code --heads "$(url "$1" "$2")" "refs/heads/$BRANCH" >/dev/null 2>&1 || rc=$?
+  git_zugriff "$2" -C / ls-remote --exit-code --heads "$(url "$1")" "refs/heads/$BRANCH" >/dev/null 2>&1 || rc=$?
   case $rc in
     0) echo "$BRANCH" ;;
     2) echo develop ;;
@@ -56,9 +70,7 @@ clone() {
   local ref
   ref=$(ref_for "$1" "$2")
   echo "$1 -> $ref"
-  git clone -q --depth 1 --branch "$ref" "$(url "$1" "$2")" "$3"
-  # Token nicht in $3/.git/config stehen lassen.
-  git -C "$3" remote set-url origin "https://github.com/$1.git"
+  git_zugriff "$2" clone -q --depth 1 --branch "$ref" "$(url "$1")" "$3"
 }
 
 if [ "$SELF" = "$KERN_REPO" ]; then
