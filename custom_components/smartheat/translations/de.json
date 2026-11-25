@@ -336,6 +336,10 @@
       "name": "Abwesend bis",
       "description": "Setzt für die gewählten Heizkreise eine Abwesenheit bis zum angegebenen Zeitpunkt. Die Heizung hält dann die Abwesenheitstemperatur und kehrt von selbst zum normalen Betrieb zurück.",
       "fields": {
+        "device_id": {
+          "name": "Heizkreise",
+          "description": "Die Heizkreise, für die die Abwesenheit gilt."
+        },
         "bis": {"name": "Zurück am", "description": "Datum und Uhrzeit Ihrer Rückkehr, höchstens 365 Tage voraus."},
         "temperatur": {"name": "Abwesenheitstemperatur", "description": "Raumtemperatur während der Abwesenheit, 15 bis 25 °C. Ohne Angabe nimmt SmartHeat die zuletzt gewählte oder seinen Vorschlag."}
       }
