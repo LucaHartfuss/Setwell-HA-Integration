@@ -51,7 +51,7 @@ jobs:
       - name: tools/ aus dem Root-Repo holen
         env:
           CI_LESE_TOKEN: ${{ secrets.CI_LESE_TOKEN }}
-          KERN_REPO: setwell-de/entwicklung
+          KERN_REPO: LucaHartfuss/HomeAssistant_Dev_Root
         run: bash scripts/ci/siblings.sh "$RUNNER_TEMP/dev" "$GITHUB_REPOSITORY" "$GITHUB_WORKSPACE" "$GITHUB_REF_NAME"
       # release_gate.py braucht nur PyYAML, installiert aus dem Hash-Lock.
       - run: pip install --require-hashes --no-deps -r "$DEV_ROOT/tools/release/requirements.txt"
