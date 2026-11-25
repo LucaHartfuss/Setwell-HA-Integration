@@ -4,9 +4,9 @@ Jede Basis-Image-Angabe hat einen Digest, jede GitHub-Action eine 40-stellige SH
 Hashes und passt zu ihrer pyproject.toml; die Hash-Locks (HASH_LOCK_NAMES: hypothesis, Bauwerkzeug,
 Dev-Werkzeuge) sind exakt gepinnt und gehasht, ohne Abgleich mit pyproject.toml. In Workflows und Dockerfiles laeuft
 jedes pip install mit --require-hashes oder traegt die Markierung `# pin-check: ungehasht (<Grund>)`. Jedes `image:`
-und `container:` (Workflows, Compose-Dateien) hat einen Digest. Nur Standardbibliothek; kanonisch in
-HomeAssistant_Dev_Root/tools/pin_check.py, identische Kopien in den drei anderen Repos (Add-on, Integration,
-HomeAssistantPapa) unter scripts/ci/pin_check.py (Root-check.sh Schritt "copies" prueft das). Der Lauf ueber die Wurzel
+und `container:` (Workflows, Compose-Dateien) hat einen Digest. Nur Standardbibliothek; kanonisch im Kern-Repo
+unter tools/pin_check.py, identische Kopien in Add-on und Integration unter scripts/ci/pin_check.py (Root-check.sh
+Schritt "copies" prueft das). Der Lauf ueber die Wurzel
 des Kern-Repos erfasst auch den Ordner HeizungssteuerungServer.
 
 Aufruf: python3 tools/pin_check.py --repo PFAD. Exit 0 = gueltig, 1 = Verstoesse
@@ -65,7 +65,7 @@ _PLAIN_VERSION = re.compile(r"^\d+(?:\.\d+)*$")
 
 def _walk(repo: Path) -> Iterator[Path]:
     """Alle Dateien unterhalb von `repo` in stabiler Reihenfolge. Uebersprungen werden Werkzeug-Ordner
-    und eigene Git-Repos/Worktrees (im Dev-Root sind die drei Unter-Repos so eingebettet) - deren Dateien
+    und eigene Git-Repos/Worktrees (im Dev-Root sind die Unter-Repos so eingebettet) - deren Dateien
     prueft der Pin-Check des jeweiligen Repos."""
     for directory, subdirs, names in os.walk(repo):
         here = Path(directory)

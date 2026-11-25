@@ -2,10 +2,10 @@ name: Release
 # Tag vX.Y.Z. Rechte und Code sind getrennt (Abschlussreview AP-04, I-1):
 #   ci:      volle Stufe (hier dieselben Jobs wie im Push-Lauf).
 #   gate:    Leserecht, keine Environment. Prueft die Freigabe (Tag-Signatur, tools/release_gate.py) und fuehrt dafuer Code
-#            aus dem privaten Root-Repo aus (siblings.sh, CROSS_REPO_TOKEN). Ohne Schreibtoken: was dort schiefgeht, erreicht
+#            aus dem Kern-Repo aus (siblings.sh, CI_LESE_TOKEN). Ohne Schreibtoken: was dort schiefgeht, erreicht
 #            main nicht. Ausgaben: dryrun, title und die Release-Notiz als Artefakt (reine Daten).
 #   release: hinter der Freigabe der Environment `release` (Runbook H-1); contents: write, kein Root-Code, kein
-#            CROSS_REPO_TOKEN. Prueft die Signatur des Tags mit dem eigenen Skript, die Ausgaben des Gates per Regex, rueckt
+#            CI_LESE_TOKEN. Prueft die Signatur des Tags mit dem eigenen Skript, die Ausgaben des Gates per Regex, rueckt
 #            main per Fast-Forward vor und legt das GitHub-Release an. Der Checkout behaelt den Token nicht
 #            (persist-credentials: false); er steht nur in den Schritten, die schreiben.
 on:
@@ -50,8 +50,8 @@ jobs:
           python-version: "3.12"
       - name: tools/ aus dem Root-Repo holen
         env:
-          CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
-          KERN_REPO: LucaHartfuss/HomeAssistant_Dev_Root
+          CI_LESE_TOKEN: ${{ secrets.CI_LESE_TOKEN }}
+          KERN_REPO: setwell-de/entwicklung
         run: bash scripts/ci/siblings.sh "$RUNNER_TEMP/dev" "$GITHUB_REPOSITORY" "$GITHUB_WORKSPACE" "$GITHUB_REF_NAME"
       # release_gate.py braucht nur PyYAML, installiert aus dem Hash-Lock.
       - run: pip install --require-hashes --no-deps -r "$DEV_ROOT/tools/release/requirements.txt"
@@ -69,7 +69,7 @@ jobs:
   release:
     needs: gate
     # Schreibt main per Fast-Forward und legt das GitHub-Release an. Das Environment `release` haelt den Lauf bis zur
-    # Freigabe des Reviewers an (Runbook H-1). Kein Root-Code, kein CROSS_REPO_TOKEN: das Gate lief im Job `gate`.
+    # Freigabe des Reviewers an (Runbook H-1). Kein Root-Code, kein CI_LESE_TOKEN: das Gate lief im Job `gate`.
     environment: release
     permissions:
       contents: write

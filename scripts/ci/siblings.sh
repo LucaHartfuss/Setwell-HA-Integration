@@ -11,7 +11,7 @@
 # genannt und unter ihrem eigenen owner/name geklont. Ist das eigene Repo das Kern-Repo, liegt die Tabelle im eigenen
 # Checkout; sonst wird zuerst das Kern-Repo nach <dev-ziel> geklont und der eigene Checkout dort eingehaengt. Je Nachbar-Repo
 # wird der gleichnamige Branch genommen, sonst develop. Oeffentliche Repos (Spalte sicht) werden ohne Token geklont,
-# fuer private braucht es CROSS_REPO_TOKEN (vorab je Repo per API geprueft, ohne Weiterleitung).
+# fuer private braucht es CI_LESE_TOKEN (vorab je Repo per API geprueft, ohne Weiterleitung).
 set -euo pipefail
 DEV="$1"; SELF="$2"; SELF_PATH="$3"; BRANCH="$4"; shift 4
 RUNBOOK="docs/ci-cd-runbook.md, Abschnitt 'Token erneuern'"
@@ -20,20 +20,20 @@ fehler() { echo "::error::$*"; exit 1; }
 
 pruefe_token() {
   # $1 = owner/name eines privaten Repos. Kein -L: eine Weiterleitung (301, Repo umgezogen) ist ein Fehler, kein Treffer.
-  [ -n "${CROSS_REPO_TOKEN:-}" ] || fehler "CROSS_REPO_TOKEN fehlt als Repository-Secret ($RUNBOOK)"
+  [ -n "${CI_LESE_TOKEN:-}" ] || fehler "CI_LESE_TOKEN fehlt als Repository-Secret ($RUNBOOK)"
   local status
-  status=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $CROSS_REPO_TOKEN" \
+  status=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $CI_LESE_TOKEN" \
     "https://api.github.com/repos/$1") || true
   case $status in
     200) ;;
     301) fehler "Repo $1 umgezogen, Tabelle nachziehen (tools/einheiten.txt, HTTP 301)" ;;
-    *) fehler "CROSS_REPO_TOKEN ungueltig oder abgelaufen (HTTP $status) ($RUNBOOK)" ;;
+    *) fehler "CI_LESE_TOKEN ungueltig oder abgelaufen (HTTP $status) ($RUNBOOK)" ;;
   esac
 }
 url() {
   # $1 = owner/name, $2 = privat|oeffentlich
   if [ "$2" = privat ]; then
-    printf 'https://x-access-token:%s@github.com/%s.git' "$CROSS_REPO_TOKEN" "$1"
+    printf 'https://x-access-token:%s@github.com/%s.git' "$CI_LESE_TOKEN" "$1"
   else
     printf 'https://github.com/%s.git' "$1"
   fi
