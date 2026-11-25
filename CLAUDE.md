@@ -1,7 +1,6 @@
 # SmartHeat-Integration — Repo-Kontext
 
-HACS-Integration `smartheat` (Ordner und GitHub-Repo heißen `SmartHeat-Integration`, ältere Dokumente sagen
-`SmartHeat-HomeAssistant-Integration`): Einrichtung des Add-ons `heizungsbruecke` über die Einrichtungs-API des
+HACS-Integration `smartheat` (Ordner und GitHub-Repo heißen `SmartHeat-Integration`): Einrichtung des Add-ons `heizungsbruecke` über die Einrichtungs-API des
 Servers, Status-Entities, Reparatur-Hinweise, Wunschtemperatur und zweiter Wächter (Schritte des Assistenten:
 `../docs/module/ha-host.md`, „Integration: Assistent“).
 
@@ -28,13 +27,9 @@ Attrappe des `aiohasupervisor`-Clients) sind gemeinsame Test-Doubles. `../tools/
 diesem Repo `const.py`, `anfrage.py` (Bodies der Einrichtungs-API) und `translations/{de,en}.json` (Verträge V1, V3, V5
 und Domäne; Liste: `python3 ../tools/contract_check.py --liste`).
 
-Branches und Releases wie in `../CLAUDE.md` („Arbeitsweise“) und `../docs/ci-cd-runbook.md`. Tag-Muster `vX.Y.Z`
-(`-dryrun`-Suffix = Probelauf); ein Push nach `main` ist ein Release, HACS bietet Kunden nur Releases an, nicht den
-neuesten `main`-Commit. Echte Tags sind **signiert** (`git tag -s`, SSH-Signatur; Pflicht-Signatur im Tag-Ruleset, zweite
-Linie `scripts/ci/tag_pruefen.sh` gegen `.github/allowed_signers` auf `main`) und laufen in der Environment `release`
-(Freigabe von Hand); der Job `gate` mit Leserecht führt den Root-Code aus, der Schreib-Job nie; Ablauf und Handgriffe:
-`../docs/ci-cd-runbook.md` §4 und §9. Die Dev-Werkzeuge installiert die CI nur aus dem Hash-Lock des Roots
-(`--require-hashes`, §12).
+Branches und Releases wie in `../CLAUDE.md` („Arbeitsweise“); Tags (Muster `vX.Y.Z`, signiert, Probelauf, Environment
+`release`) und Dev-Lock: `../docs/ci-cd-runbook.md` §4, §9 und §12. HACS bietet Kunden nur Releases an, nicht den
+neuesten `main`-Commit.
 
 ## Fallen
 
@@ -45,8 +40,8 @@ Linie `scripts/ci/tag_pruefen.sh` gegen `.github/allowed_signers` auf `main`) un
 - Add-on-Slugs tragen einen Repo-Hash-Präfix (z. B. `f5f6325b_heizungsbruecke`):
   `supervisor_client.async_resolve_bridge`.
 - `manifest.json`-Repo-URL = Name des GitHub-Repos (`SmartHeat-Integration`), nicht der lokale Ordnername.
-- Einträge ohne `geraet_id` (VERSION 2) bleiben ohne Migration im Zustand `MIGRATION_ERROR` (seit Stufe 4; kein eigener
-  Text mehr); „Neu konfigurieren“ bricht bei ihnen mit `unknown` ab.
+- Einträge ohne `geraet_id` (VERSION 2) bleiben ohne Migration im Zustand `MIGRATION_ERROR`; „Neu konfigurieren“ bricht
+  bei ihnen mit `unknown` ab.
 - Die Entities von `client1` bleiben nicht, wie sie waren: `registry_umzug.py` zieht beim Laden die vorhandenen
   Kreis-Entities (bei Vaillant mit vier Hebeln 13 je Kreis: 6 feste, 4 Hebel, 2 Lernwerte, Wunschtemperatur; auf `client1`
   gab es vor dem Update davon 11, `raumtemperatur` und `befunde` entstehen neu) als dieselben Registry-Einträge auf
