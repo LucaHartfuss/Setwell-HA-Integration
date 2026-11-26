@@ -12,6 +12,11 @@ HACS zeigt den Abschnitt der jeweiligen Version als Release-Notiz. Pro Version e
   die Abwesenheit lokal an das Add-on; dazu je Heizkreis der Binary-Sensor `abwesend` und der Zeitstempel `zurueck_am`.
   Die Rückkehrzeit steht nie im Log. Das Add-on muss die Abwesenheit im Status-Ereignis melden (Feld `abwesend`).
 
+## 2.0.1
+
+Wartungsrelease ohne Änderung an der Integration: nur die CI-Dateien des Repos (Lese-Token für das Kern-Repo) ziehen auf
+`main` nach. Kein Funktionsunterschied zu 2.0.0.
+
 ## 2.0.0
 
 Teil des Releases Setwell 0.0.1. Der Server muss vorher auf 0.0.1 stehen.
