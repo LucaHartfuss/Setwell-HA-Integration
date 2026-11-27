@@ -1,4 +1,4 @@
-"""Assistent der SmartHeat-Integration: feste Schritte, Inhalte vom Server.
+"""Assistent der Setwell-HA-Integration: feste Schritte, Inhalte vom Server.
 
 Start aus der Supervisor-Discovery des Add-ons (Geraete-ID, Uebernahme-Code) oder manuell (Add-on installieren und
 starten, dann dessen Discovery lesen); beide Wege pruefen vorher die Mindestversion des Add-ons. Die Anmeldung braucht

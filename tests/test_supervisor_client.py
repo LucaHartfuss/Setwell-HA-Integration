@@ -19,7 +19,7 @@ from custom_components.smartheat.supervisor_client import (
 
 from .supervisor_fakes import installed_addon, repository
 
-REPO_URL = "https://github.com/LucaHartfuss/SmartHeat-for-HomeAssistant"
+REPO_URL = "https://github.com/LucaHartfuss/Setwell-Client"
 MIN = "0.19.0"
 
 
@@ -157,7 +157,7 @@ _ZWEI_EINTRAEGE = [_repository(REPO, source=REPO_URL), _repository("0badc0de", s
     # kein oder kein eindeutiger Store-Eintrag: nie „fehlt“
     ([], [], "unklar"),
     ([], [_installed_addon(_EIGENE)], "unklar"),
-    ([_repository(source="https://github.com/jemand/SmartHeat-for-HomeAssistant")], [], "unklar"),
+    ([_repository(source="https://github.com/jemand/Setwell-Client")], [], "unklar"),
     (_ZWEI_EINTRAEGE, [], "unklar"),
     (_ZWEI_EINTRAEGE, [_installed_addon(_EIGENE)], "unklar"),
 ])
@@ -298,7 +298,7 @@ async def test_store_error_becomes_addon_error(supervisor):
     REPO_URL + "#develop\n",
     "  " + REPO_URL + "#develop ",
     # GitHub unterscheidet Gross- und Kleinschreibung im Pfad nicht
-    "https://github.com/lucahartfuss/smartheat-for-homeassistant#develop",
+    "https://github.com/lucahartfuss/setwell-client#develop",
 ])
 async def test_a_branch_of_our_repository_is_our_repository(supervisor, source):
     _setup(supervisor, _both(), repositories=[_repository(source=source)])
@@ -328,8 +328,8 @@ async def test_a_branch_entry_keeps_the_slug_check(supervisor, fake):
 @pytest.mark.parametrize("source", [
     REPO_URL + "#",  # leerer Branch
     REPO_URL + "#develop#x",  # mehr als ein `#` ist keine Branch-Angabe
-    "https://github.com/andere/SmartHeat-for-HomeAssistant",  # anderer Nutzer
-    "https://github.com/andere/SmartHeat-for-HomeAssistant#develop",  # Fork mit Branch
+    "https://github.com/andere/Setwell-Client",  # anderer Nutzer
+    "https://github.com/andere/Setwell-Client#develop",  # Fork mit Branch
     REPO_URL + "-fork",  # Anhang am Namen
     REPO_URL + "-fork#develop",
     REPO_URL + "/sub",  # Unterpfad

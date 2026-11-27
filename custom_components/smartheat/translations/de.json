@@ -322,7 +322,7 @@
     "thermostat_aus": {"message": "Das Thermostat ist ausgeschaltet. Solange es aus ist, nimmt SmartHeat keine Wunschtemperatur an."},
     "addon_nicht_bereit": {"message": "Das Add-on läuft nicht oder meldet sich nicht, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben. Bitte warten, bis das Add-on wieder läuft."},
     "addon_fehlt": {"message": "Das Add-on ist nicht installiert, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben."},
-    "integration_veraltet": {"message": "Die SmartHeat-Integration ist älter als das Add-on und liest dessen Meldungen nicht, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben. Bitte die Integration aktualisieren."},
+    "integration_veraltet": {"message": "Die Setwell-HA-Integration ist älter als das Add-on und liest dessen Meldungen nicht, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben. Bitte die Integration aktualisieren."},
     "addon_veraltet": {"message": "Das SmartHeat-Add-on ist älter als die Integration und wird von ihr nicht verstanden, SmartHeat kann Ihre Eingabe deshalb nicht weitergeben. Bitte das Add-on aktualisieren."},
     "kreis_unbekannt": {"message": "Das gewählte Gerät ist kein Heizkreis von SmartHeat. Bitte das Gerät eines Heizkreises wählen."},
     "abwesend_bis_ungueltig": {"message": "Die Rückkehrzeit ist kein gültiges Datum mit Uhrzeit."},

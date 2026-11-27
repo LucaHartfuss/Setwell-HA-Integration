@@ -4,10 +4,10 @@
   "after_dependencies": ["hassio"],
   "codeowners": ["@LucaHartfuss"],
   "config_flow": true,
-  "documentation": "https://github.com/LucaHartfuss/SmartHeat-Integration",
+  "documentation": "https://github.com/LucaHartfuss/Setwell-HA-Integration",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/LucaHartfuss/SmartHeat-Integration/issues",
+  "issue_tracker": "https://github.com/LucaHartfuss/Setwell-HA-Integration/issues",
   "requirements": [],
   "single_config_entry": true,
   "version": "2.0.1"

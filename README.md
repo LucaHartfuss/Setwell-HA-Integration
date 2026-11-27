@@ -1,7 +1,7 @@
 # SmartHeat fuer Home Assistant
 
 HACS-Integration fuer das SmartHeat-Add-on `heizungsbruecke` aus dem Repo
-[SmartHeat-for-HomeAssistant](https://github.com/LucaHartfuss/SmartHeat-for-HomeAssistant). Das Add-on ist ein
+[Setwell-Client](https://github.com/LucaHartfuss/Setwell-Client). Das Add-on ist ein
 Geraet des SmartHeat-Servers; die Integration richtet es ueber die Einrichtungs-API des Servers ein und zeigt seinen
 Status in Home Assistant. Die Regelung selbst laeuft auf dem Server und im Add-on, nicht in der Integration.
 
@@ -16,7 +16,7 @@ Status in Home Assistant. Die Regelung selbst laeuft auf dem Server und im Add-o
 ## Installation
 
 1. Dieses Repository als HACS-Custom-Repository hinzufuegen und "SmartHeat" installieren, Home Assistant neu starten.
-2. Das Add-on-Repository `https://github.com/LucaHartfuss/SmartHeat-for-HomeAssistant` im Add-on-Store eintragen und
+2. Das Add-on-Repository `https://github.com/LucaHartfuss/Setwell-Client` im Add-on-Store eintragen und
    `heizungsbruecke` installieren und starten. (Fehlt das Add-on, installiert und startet es der Assistent selbst.)
 3. Einstellungen → Geraete & Dienste: "SmartHeat gefunden" bestaetigen (Supervisor-Discovery des Add-ons) und dem
    Assistenten folgen: Anmelden → Anlage → (Inventur laeuft) → Heizungs-Integration → System → ggf. Hebelsatz →
@@ -67,7 +67,7 @@ Hinweise des Geraets (z. B. Update noetig, Geraet gesperrt, Einstellung abgelehn
 Die Reihenfolge ist wichtig: Wer zuerst das Add-on deinstalliert oder die Integration entfernt, laesst die Heizung auf
 den zuletzt geschriebenen Werten. Die Schritte, die Warnung und das Loeschen der Hilfssensoren stehen im Abschnitt
 "SmartHeat vollstaendig entfernen" der
-[Add-on-Dokumentation](https://github.com/LucaHartfuss/SmartHeat-for-HomeAssistant/blob/main/heizungsbruecke/DOCS.md).
+[Add-on-Dokumentation](https://github.com/LucaHartfuss/Setwell-Client/blob/main/heizungsbruecke/DOCS.md).
 
 **Reparatur "Add-on nicht installiert"** (`addon_fehlt`): Die Integration ueberwacht das Add-on und meldet diesen
 Hinweis, wenn die Heizungsbruecke nicht mehr installiert ist (nach drei Pruefungen in Folge, ohne Neustart des
