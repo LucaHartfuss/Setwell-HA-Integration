@@ -1,4 +1,4 @@
-"""Konstanten der SmartHeat-Integration: Oberflaeche ueber der Einrichtungs-API des Servers, Status
+"""Konstanten der Setwell-HA-Integration: Oberflaeche ueber der Einrichtungs-API des Servers, Status
 und Wunschtemperatur ueber das lokale Add-on. Ereignis-, Discovery- und Routen-Werte sind Cross-Repo-Vertrag
 (tools/contract_check.py im Dev-Root)."""
 import hashlib
@@ -344,7 +344,7 @@ PUSH_HINWEISE_AUS_MAX = 20
 # (Stille 900 s plus ein Pruefschritt).
 PUSH_ABGLEICH_SECONDS = SILENCE_SECONDS + WATCHDOG_INTERVAL_SECONDS
 
-ADDON_REPOSITORY_URL = "https://github.com/LucaHartfuss/SmartHeat-for-HomeAssistant"
+ADDON_REPOSITORY_URL = "https://github.com/LucaHartfuss/Setwell-Client"
 HEIZUNGSBRUECKE_ADDON_SLUG = "heizungsbruecke"
 ADDON_NAME = "Heizungsbruecke"  # Anzeigename fuer HAs AddonManager und die Logzeilen
 MIN_ADDON_VERSIONS: dict[str, str] = {HEIZUNGSBRUECKE_ADDON_SLUG: "1.0.0"}

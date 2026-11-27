@@ -1,4 +1,4 @@
-"""Sensoren der SmartHeat-Integration (Hebel aus entry.data, Schluessel stabil fuer die Entity-IDs von client1)."""
+"""Sensoren der Setwell-HA-Integration (Hebel aus entry.data, Schluessel stabil fuer die Entity-IDs von client1)."""
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
