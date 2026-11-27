@@ -11,6 +11,7 @@ Status in Home Assistant. Die Regelung selbst laeuft auf dem Server und im Add-o
 - Eine unterstuetzte Heizungs-Integration in Home Assistant eingerichtet (z. B. myVAILLANT).
 - Ein SmartHeat-Konto.
 - Das Add-on `heizungsbruecke` ab Version 1.0.0. Eine aeltere Version lehnt der Assistent mit einem Hinweis ab.
+  (Neuere Home-Assistant-Versionen nennen Add-ons "Apps" und den Add-on-Store "App-Store"; gemeint ist dasselbe.)
 
 ## Installation
 
@@ -63,19 +64,10 @@ Hinweise des Geraets (z. B. Update noetig, Geraet gesperrt, Einstellung abgelehn
 
 ## Entfernen
 
-SmartHeat vollstaendig entfernen: genau in dieser Reihenfolge.
-
-1. Den Eintrag "SmartHeat" unter Einstellungen → Geraete & Dienste loeschen (oder das Geraet im Portal entfernen).
-2. Im Portal abwarten, bis die Anlage "Abgemeldet" zeigt. Dann sind die Ursprungswerte der Heizung wieder gesetzt.
-3. Das Add-on `heizungsbruecke` unter Einstellungen → Apps deinstallieren.
-4. Die Integration "SmartHeat" in HACS entfernen.
-
-**Warnung:** Wer zuerst das Add-on deinstalliert oder die Integration entfernt, laesst die Heizung auf den zuletzt
-geschriebenen Werten; Home Assistant meldet uns das nicht. Weder der Supervisor noch HACS rufen beim Deinstallieren
-Code von SmartHeat auf, der die Heizung zuruecksetzen koennte. Ohne Add-on bleibt die Anlage auf den letzten Werten
-(bei Vaillant: Zone "Manuell", gelernte Heizgrenze), mit dem Add-on, aber ohne Integration, regelt SmartHeat weiter,
-und Home Assistant zeigt davon nichts mehr. Die Hilfssensoren des Add-ons entfallen beim naechsten Start nach der
-Abmeldung; nach hartem Entfernen loeschen Sie sie unter Einstellungen → Geraete & Dienste → Helfer von Hand.
+Die Reihenfolge ist wichtig: Wer zuerst das Add-on deinstalliert oder die Integration entfernt, laesst die Heizung auf
+den zuletzt geschriebenen Werten. Die Schritte, die Warnung und das Loeschen der Hilfssensoren stehen im Abschnitt
+"SmartHeat vollstaendig entfernen" der
+[Add-on-Dokumentation](https://github.com/LucaHartfuss/Setwell-Client/blob/main/heizungsbruecke/DOCS.md).
 
 **Reparatur "Add-on nicht installiert"** (`addon_fehlt`): Die Integration ueberwacht das Add-on und meldet diesen
 Hinweis, wenn die Heizungsbruecke nicht mehr installiert ist (nach drei Pruefungen in Folge, ohne Neustart des
@@ -92,4 +84,4 @@ Neustart von Home Assistant geht er erst wieder hinaus, wenn sich das Add-on gem
 ## Aenderungen
 
 Alle Versionen stehen in [CHANGELOG.md](CHANGELOG.md) (HACS zeigt den jeweiligen Abschnitt als
-Release-Notiz). Update von 0.16: Abschnitt 1.0.0 dort.
+Release-Notiz).
