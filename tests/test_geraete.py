@@ -70,7 +70,7 @@ async def test_die_anlage_ist_ein_geraet_das_vor_dem_ersten_ereignis_den_produkt
     entry = await _setup(hass)
 
     anlage = _geraet(hass, ANLAGE)
-    assert anlage is not None and entry.entry_id in anlage.config_entries
+    assert anlage is not None and anlage.config_entry_id == entry.entry_id
     assert anlage.name == "SmartHeat" and anlage.manufacturer == "SmartHeat"
     assert anlage.via_device_id is None and anlage.configuration_url is None
 
@@ -118,7 +118,7 @@ async def test_je_kreis_ein_geraet_mit_dem_namen_des_abos_ueber_der_anlage(hass)
     anlage = _geraet(hass, ANLAGE)
     for nummer in (1, 2):
         kreis = _geraet(hass, _kennung(nummer))
-        assert kreis is not None and entry.entry_id in kreis.config_entries
+        assert kreis is not None and kreis.config_entry_id == entry.entry_id
         assert kreis.name == f"Kreis-{nummer}" and kreis.via_device_id == anlage.id
         assert kreis.manufacturer == "SmartHeat" and kreis.configuration_url is None
     assert len(_kreis_geraete(hass, entry)) == 2
