@@ -1,6 +1,6 @@
-# SmartHeat-Integration — Repo-Kontext
+# Setwell-HA-Integration — Repo-Kontext
 
-HACS-Integration `smartheat` (Ordner und GitHub-Repo heißen `SmartHeat-Integration`, ältere Dokumente sagen
+HACS-Integration `smartheat` (Ordner und GitHub-Repo heißen `Setwell-HA-Integration`, ältere Dokumente sagen
 `SmartHeat-HomeAssistant-Integration`): Einrichtung des Add-ons `heizungsbruecke` über die Einrichtungs-API des
 Servers, Status-Entities, Reparatur-Hinweise, Wunschtemperatur und zweiter Wächter (Schritte des Assistenten:
 `../docs/module/ha-host.md`, „Integration: Assistent“).
@@ -44,7 +44,7 @@ Linie `scripts/ci/tag_pruefen.sh` gegen `.github/allowed_signers` auf `main`) un
   das Add-on nicht konfiguriert ist).
 - Add-on-Slugs tragen einen Repo-Hash-Präfix (z. B. `f5f6325b_heizungsbruecke`):
   `supervisor_client.async_resolve_bridge`.
-- `manifest.json`-Repo-URL = Name des GitHub-Repos (`SmartHeat-Integration`), nicht der lokale Ordnername.
+- `manifest.json`-Repo-URL = Name des GitHub-Repos (`Setwell-HA-Integration`), nicht der lokale Ordnername.
 - Einträge ohne `geraet_id` (VERSION 2) bleiben ohne Migration im Zustand `MIGRATION_ERROR` (seit Stufe 4; kein eigener
   Text mehr); „Neu konfigurieren“ bricht bei ihnen mit `unknown` ab.
 - Die Entities von `client1` bleiben nicht, wie sie waren: `registry_umzug.py` zieht beim Laden die vorhandenen

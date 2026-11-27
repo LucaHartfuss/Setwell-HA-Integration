@@ -1,7 +1,7 @@
 # SmartHeat fuer Home Assistant
 
 HACS-Integration fuer das SmartHeat-Add-on `heizungsbruecke` aus dem Repo
-[SmartHeat-for-HomeAssistant](https://github.com/LucaHartfuss/SmartHeat-for-HomeAssistant). Das Add-on ist ein
+[Setwell-Client](https://github.com/LucaHartfuss/Setwell-Client). Das Add-on ist ein
 Geraet des SmartHeat-Servers; die Integration richtet es ueber die Einrichtungs-API des Servers ein und zeigt seinen
 Status in Home Assistant. Die Regelung selbst laeuft auf dem Server und im Add-on, nicht in der Integration.
 
@@ -15,7 +15,7 @@ Status in Home Assistant. Die Regelung selbst laeuft auf dem Server und im Add-o
 ## Installation
 
 1. Dieses Repository als HACS-Custom-Repository hinzufuegen und "SmartHeat" installieren, Home Assistant neu starten.
-2. Das Add-on-Repository `https://github.com/LucaHartfuss/SmartHeat-for-HomeAssistant` im Add-on-Store eintragen und
+2. Das Add-on-Repository `https://github.com/LucaHartfuss/Setwell-Client` im Add-on-Store eintragen und
    `heizungsbruecke` installieren und starten. (Fehlt das Add-on, installiert und startet es der Assistent selbst.)
 3. Einstellungen → Geraete & Dienste: "SmartHeat gefunden" bestaetigen (Supervisor-Discovery des Add-ons) und dem
    Assistenten folgen: Anmelden → Anlage → (Inventur laeuft) → Heizungs-Integration → System → ggf. Hebelsatz →

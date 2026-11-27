@@ -1059,8 +1059,8 @@ async def test_time_tick_and_event_recheck_never_check_at_the_same_time(hass, su
 
 
 _NICHT_AUFLOESBAR = pytest.mark.parametrize("source", [
-    "http://github.com/LucaHartfuss/SmartHeat-for-HomeAssistant",
-    "https://github.com/jemand/SmartHeat-for-HomeAssistant",
+    "http://github.com/LucaHartfuss/Setwell-Client",
+    "https://github.com/jemand/Setwell-Client",
 ], ids=["http", "fork"])
 
 

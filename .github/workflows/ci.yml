@@ -58,7 +58,7 @@ jobs:
         with:
           python-version: "3.14"
       # requirements_test.txt pinnt die phcc-Version von client1 (phcc 0.13.367 pinnt homeassistant==2026.9.4); sie
-      # folgt ha_version in tools/client1-umgebung.txt des Kern-Repos und wird mit dem HA-Pin in SmartHeat-for-HomeAssistant/.github/workflows/ci.yml
+      # folgt ha_version in tools/client1-umgebung.txt des Kern-Repos und wird mit dem HA-Pin in Setwell-Client/.github/workflows/ci.yml
       # zusammen angehoben (docs/ci-cd-runbook.md; tools/ha_version_check.py prueft die Zeile unten).
       - run: pip install -r requirements_test.txt  # pin-check: ungehasht (CI ohne Schreibrecht, HA-Testumgebung)
       - name: HA-Testumgebung von client1 (ha_version in tools/client1-umgebung.txt = 2026.9.4)
@@ -97,11 +97,11 @@ jobs:
       - name: Dev-Root aufbauen
         env:
           CI_LESE_TOKEN: ${{ secrets.CI_LESE_TOKEN }}
-          KERN_REPO: LucaHartfuss/HomeAssistant_Dev_Root
+          KERN_REPO: LucaHartfuss/Setwell-Dev-Root
           SIBLINGS_REF: ${{ github.event_name == 'schedule' && 'develop' || github.ref_name }}
         run: >-
           bash scripts/ci/siblings.sh "$RUNNER_TEMP/dev" "$GITHUB_REPOSITORY" "$GITHUB_WORKSPACE"
           "$SIBLINGS_REF"
-          SmartHeat-for-HomeAssistant
+          Setwell-Client
       - run: pip install --require-hashes -r "$DEV_ROOT/tools/requirements-dev.txt"
       - run: PYTHON=python bash scripts/check.sh --only contract

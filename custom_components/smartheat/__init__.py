@@ -1,4 +1,4 @@
-"""SmartHeat-Integration: richtet das Add-on als Geraet ueber die Einrichtungs-API des Servers
+"""Setwell-HA-Integration: richtet das Add-on als Geraet ueber die Einrichtungs-API des Servers
 ein, zeigt seinen Status als Entities, macht seine Hinweise zu Reparatur-Hinweisen, bietet die Wunschtemperatur an
 und ueberwacht die Heizungsbruecke (zweiter Waechter); das Loeschen des Eintrags meldet das Geraet lokal ab."""
 from __future__ import annotations
